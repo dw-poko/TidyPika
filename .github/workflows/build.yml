@@ -52,28 +52,25 @@ jobs:
         run: flutter build windows --release
 
       - name: Package
+        # The engine DLL anchors the real output directory. Searching for a
+        # folder named Release instead finds CMake's intermediate dirs.
         run: |
-          $release = Get-ChildItem build/windows -Recurse -Directory -Filter Release |
-            Select-Object -First 1
-          if (-not $release) { throw 'no Release directory produced' }
+          $engine = Get-ChildItem build/windows -Recurse -File `
+            -Filter flutter_windows.dll | Select-Object -First 1
+          if (-not $engine) { throw 'build output not found' }
 
-          "RELEASE_DIR=$($release.FullName)" | Out-File $env:GITHUB_ENV -Append
-          Compress-Archive -Path "$($release.FullName)\*" `
+          $release = $engine.Directory.FullName
+          Write-Host "release directory: $release"
+          Get-ChildItem $release | ForEach-Object { Write-Host "  $($_.Name)" }
+
+          Compress-Archive -Path "$release\*" `
             -DestinationPath TidyPika-win-x64.zip -Force
 
-      - name: Report size
-        run: |
-          $raw = (Get-ChildItem $env:RELEASE_DIR -Recurse -File |
+          $raw = (Get-ChildItem $release -Recurse -File |
             Measure-Object -Property Length -Sum).Sum
           $zip = (Get-Item TidyPika-win-x64.zip).Length
           Write-Host ("unpacked: {0:N1} MB" -f ($raw / 1MB))
           Write-Host ("zipped:   {0:N1} MB" -f ($zip / 1MB))
-          Write-Host '--- largest files ---'
-          Get-ChildItem $env:RELEASE_DIR -Recurse -File |
-            Sort-Object Length -Descending | Select-Object -First 10 |
-            ForEach-Object {
-              Write-Host ("{0,8:N1} MB  {1}" -f ($_.Length / 1MB), $_.Name)
-            }
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
