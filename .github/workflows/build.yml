@@ -51,7 +51,7 @@ jobs:
       - name: Build
         run: flutter build windows --release
 
-      - name: Package
+      - name: Package the folder build
         # The engine DLL anchors the real output directory. Searching for a
         # folder named Release instead finds CMake's intermediate dirs.
         run: |
@@ -62,19 +62,78 @@ jobs:
           $release = $engine.Directory.FullName
           Write-Host "release directory: $release"
           Get-ChildItem $release | ForEach-Object { Write-Host "  $($_.Name)" }
+          "RELEASE_DIR=$release" | Out-File $env:GITHUB_ENV -Append -Encoding utf8
 
           Compress-Archive -Path "$release\*" `
             -DestinationPath TidyPika-win-x64.zip -Force
 
           $raw = (Get-ChildItem $release -Recurse -File |
             Measure-Object -Property Length -Sum).Sum
-          $zip = (Get-Item TidyPika-win-x64.zip).Length
           Write-Host ("unpacked: {0:N1} MB" -f ($raw / 1MB))
-          Write-Host ("zipped:   {0:N1} MB" -f ($zip / 1MB))
+          Write-Host ("zipped:   {0:N1} MB" -f `
+            ((Get-Item TidyPika-win-x64.zip).Length / 1MB))
 
-      - name: Upload artifact
+      # Uploaded before the single-file step so a working build is always
+      # published even if the self-extractor cannot be assembled.
+      - name: Upload the folder build
         uses: actions/upload-artifact@v4
         with:
-          name: TidyPika-win-x64
+          name: TidyPika-folder
           path: TidyPika-win-x64.zip
+          retention-days: 30
+
+      - name: Build the single-file executable
+        # Flutter keeps its engine DLL and assets as separate files on disk, so
+        # there is no genuine one-file target. This wraps the folder in a 7-Zip
+        # self-extractor: one executable that unpacks to a temp directory and
+        # launches the app.
+        run: |
+          $sevenZip = 'C:\Program Files\7-Zip\7z.exe'
+          if (-not (Test-Path $sevenZip)) { throw '7-Zip is not installed' }
+
+          # The SFX modules ship in the "extra" package rather than the normal
+          # install, and its filename carries the version.
+          $module = $null
+          foreach ($version in '2409', '2408', '2301') {
+            try {
+              Invoke-WebRequest "https://www.7-zip.org/a/7z$version-extra.7z" `
+                -OutFile extra.7z -UseBasicParsing
+              & $sevenZip x extra.7z -oextra -y | Out-Null
+              $module = Get-ChildItem extra -Recurse -File |
+                Where-Object { $_.Name -in '7zSD.sfx', '7zS.sfx' } |
+                Sort-Object Name -Descending | Select-Object -First 1
+              if ($module) { break }
+            } catch {
+              Write-Host "7z$version-extra.7z unavailable, trying the next"
+            }
+          }
+          if (-not $module) { throw 'no 7-Zip SFX module could be obtained' }
+          Write-Host "sfx module: $($module.Name)"
+
+          & $sevenZip a -t7z -mx=9 payload.7z "$env:RELEASE_DIR\*" | Out-Null
+
+          $config = ";!@Install@!UTF-8!`r`n" +
+            "RunProgram=`"TidyPika.exe`"`r`n" +
+            "GUIMode=`"2`"`r`n" +
+            ";!@InstallEnd@!`r`n"
+          [System.IO.File]::WriteAllText(
+            "$PWD\config.txt",
+            $config,
+            (New-Object System.Text.UTF8Encoding($false)))
+
+          $copy = 'copy /b "{0}" + config.txt + payload.7z TidyPika.exe' `
+            -f $module.FullName
+          cmd /c $copy
+
+          if (-not (Test-Path TidyPika.exe)) {
+            throw 'the single-file build produced nothing'
+          }
+          Write-Host ("single exe: {0:N1} MB" -f `
+            ((Get-Item TidyPika.exe).Length / 1MB))
+
+      - name: Upload the single-file executable
+        uses: actions/upload-artifact@v4
+        with:
+          name: TidyPika-exe
+          path: TidyPika.exe
           retention-days: 30

@@ -131,6 +131,8 @@ class _DuplicatesPageState extends State<DuplicatesPage> {
 
   @override
   Widget build(BuildContext context) {
+    LanguageScope.watch(context);
+
     final showStatus = _busy || _monitor.progress != null;
     final wasted = _groups.fold(0, (sum, group) => sum + group.wastedSize);
 
@@ -223,6 +225,8 @@ class _GroupCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    LanguageScope.watch(context);
+
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
 

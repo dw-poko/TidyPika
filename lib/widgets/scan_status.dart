@@ -35,6 +35,8 @@ class ScanStatusPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    LanguageScope.watch(context);
+
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
 

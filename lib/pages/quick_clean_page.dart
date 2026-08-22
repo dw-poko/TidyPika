@@ -134,6 +134,8 @@ class _QuickCleanPageState extends State<QuickCleanPage> {
 
   @override
   Widget build(BuildContext context) {
+    LanguageScope.watch(context);
+
     final showStatus = _busy || _monitor.progress != null;
 
     return PageScaffold(

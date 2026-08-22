@@ -34,6 +34,8 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    LanguageScope.watch(context);
+
     return PageScaffold(
       title: t('home.title'),
       subtitle: t('home.subtitle'),
@@ -66,6 +68,8 @@ class _DiskCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    LanguageScope.watch(context);
+
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final percent = disk.usedPercent;

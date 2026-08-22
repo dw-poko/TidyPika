@@ -14,9 +14,8 @@ class TidyPikaApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<AppLanguage>(
-      valueListenable: language,
-      builder: (context, _, __) => MaterialApp(
+    return LanguageScope(
+      child: MaterialApp(
         title: 'TidyPika',
         debugShowCheckedModeBanner: false,
         theme: _themeFor(Brightness.light),
@@ -64,6 +63,8 @@ class _AppShellState extends State<AppShell> {
 
   @override
   Widget build(BuildContext context) {
+    LanguageScope.watch(context);
+
     final scheme = Theme.of(context).colorScheme;
     final extended = MediaQuery.sizeOf(context).width >= 1000;
 

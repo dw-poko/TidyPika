@@ -67,6 +67,7 @@ class EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    LanguageScope.watch(context);
     final theme = Theme.of(context);
 
     return Center(
@@ -95,6 +96,7 @@ class RiskChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    LanguageScope.watch(context);
     final scheme = Theme.of(context).colorScheme;
 
     final (Color background, Color foreground) = switch (risk) {
@@ -135,6 +137,8 @@ class PathField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    LanguageScope.watch(context);
+
     return TextField(
       controller: controller,
       enabled: enabled,
@@ -186,6 +190,8 @@ class CleanActionBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    LanguageScope.watch(context);
+
     return Row(
       children: [
         Switch(value: recycle, onChanged: onRecycleChanged),

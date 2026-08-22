@@ -40,9 +40,19 @@ and the pip and npm package caches.
 
 ## Install
 
-Download `TidyPika-win-x64.zip` from the latest [build](../../actions), extract
-it anywhere, and run `TidyPika.exe`. No installer and no runtime download — the
-Flutter engine ships alongside the executable in `flutter_windows.dll`.
+The latest [build](../../actions) publishes two artifacts:
+
+- **`TidyPika-exe`** — a single `TidyPika.exe`. Nothing to unpack or install.
+- **`TidyPika-folder`** — the plain build: `TidyPika.exe`,
+  `flutter_windows.dll` and `data/`.
+
+Flutter keeps its engine and assets as separate files on disk, so the
+single-file build is a self-extractor rather than one genuine binary: it
+unpacks to a temp directory at launch and starts the app from there. That
+costs a moment on every start, and an unsigned self-extracting executable is
+likelier to draw a SmartScreen or antivirus prompt than the plain folder
+build. Either one is the same app — take the folder build if that trade is
+not worth it.
 
 Windows 10 1809 or newer, x64. The app expects the Microsoft Visual C++
 runtime, which almost every Windows install already has.

@@ -1,15 +1,30 @@
 import 'dart:io';
 
-import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:path/path.dart' as p;
 
 import '../core/win32.dart';
 
 enum AppLanguage { korean, english }
 
-/// Switching this rebuilds the whole app, so captions change without a restart.
 final ValueNotifier<AppLanguage> language =
     ValueNotifier<AppLanguage>(AppLanguage.english);
+
+/// Publishes the current language to the widget tree.
+///
+/// Rebuilding from the top does not work on its own: when a parent rebuilds and
+/// hands back a widget it already has — which is exactly what a `const` child
+/// is — Flutter reuses the element and skips the whole subtree, so captions
+/// would keep their old text. Depending on this instead marks each reader dirty
+/// directly, so `const` costs nothing and cannot silently break the switch.
+class LanguageScope extends InheritedNotifier<ValueNotifier<AppLanguage>> {
+  LanguageScope({required super.child, super.key}) : super(notifier: language);
+
+  /// Call at the top of any `build` that reads [t] or [tf].
+  static void watch(BuildContext context) {
+    context.dependOnInheritedWidgetOfExactType<LanguageScope>();
+  }
+}
 
 void initLanguage() {
   language.value = _loadPreference() ?? _systemDefault();

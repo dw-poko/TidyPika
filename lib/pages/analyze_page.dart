@@ -75,6 +75,8 @@ class _AnalyzePageState extends State<AnalyzePage> {
 
   @override
   Widget build(BuildContext context) {
+    LanguageScope.watch(context);
+
     final theme = Theme.of(context);
     final showStatus = _busy || _monitor.progress != null;
     final total = _entries.fold(0, (sum, entry) => sum + entry.size);
@@ -143,6 +145,8 @@ class _DirectoryRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    LanguageScope.watch(context);
+
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final share = total > 0 ? entry.size * 100 / total : 0.0;

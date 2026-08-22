@@ -124,6 +124,8 @@ class _LargeFilesPageState extends State<LargeFilesPage> {
 
   @override
   Widget build(BuildContext context) {
+    LanguageScope.watch(context);
+
     final showStatus = _busy || _monitor.progress != null;
     final selectedBytes = _results
         .where((entry) => _selected.contains(entry.path))
