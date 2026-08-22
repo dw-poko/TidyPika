@@ -76,7 +76,7 @@ class _AnalyzePageState extends State<AnalyzePage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final showStatus = _busy || _monitor.log.isNotEmpty;
+    final showStatus = _busy || _monitor.progress != null;
     final total = _entries.fold(0, (sum, entry) => sum + entry.size);
 
     return PageScaffold(

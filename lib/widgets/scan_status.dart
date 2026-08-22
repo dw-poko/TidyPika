@@ -4,20 +4,12 @@ import '../core/models.dart';
 import '../core/size_formatter.dart';
 import '../l10n/strings.dart';
 
-/// Holds the live state of a running scan: the latest tick plus a bounded log
-/// of the targets and directories that have been walked.
+/// Holds the live state of a running scan.
 class ScanMonitor extends ChangeNotifier {
-  static const int _maxLogLines = 300;
-
   ScanProgress? progress;
   bool running = false;
-  final List<String> log = [];
-
-  String _lastDetail = '';
 
   void start() {
-    log.clear();
-    _lastDetail = '';
     progress = null;
     running = true;
     notifyListeners();
@@ -25,15 +17,6 @@ class ScanMonitor extends ChangeNotifier {
 
   void report(ScanProgress value) {
     progress = value;
-
-    // One line per new target or directory: a line per file would bury the log
-    // and pin the UI thread.
-    if (value.detail.isNotEmpty && value.detail != _lastDetail) {
-      _lastDetail = value.detail;
-      log.add(value.detail);
-      if (log.length > _maxLogLines) log.removeAt(0);
-    }
-
     notifyListeners();
   }
 
@@ -43,33 +26,12 @@ class ScanMonitor extends ChangeNotifier {
   }
 }
 
-class ScanStatusPanel extends StatefulWidget {
+/// A single strip: what is happening, how far along, and a way to stop.
+class ScanStatusPanel extends StatelessWidget {
   const ScanStatusPanel({required this.monitor, this.onCancel, super.key});
 
   final ScanMonitor monitor;
   final VoidCallback? onCancel;
-
-  @override
-  State<ScanStatusPanel> createState() => _ScanStatusPanelState();
-}
-
-class _ScanStatusPanelState extends State<ScanStatusPanel> {
-  final ScrollController _controller = ScrollController();
-  int _lastLogLength = 0;
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  void _scrollToLatest() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_controller.hasClients) {
-        _controller.jumpTo(_controller.position.maxScrollExtent);
-      }
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -77,25 +39,17 @@ class _ScanStatusPanelState extends State<ScanStatusPanel> {
     final scheme = theme.colorScheme;
 
     return ListenableBuilder(
-      listenable: widget.monitor,
+      listenable: monitor,
       builder: (context, _) {
-        final monitor = widget.monitor;
         final progress = monitor.progress;
-
-        if (monitor.log.length != _lastLogLength) {
-          _lastLogLength = monitor.log.length;
-          _scrollToLatest();
-        }
-
         final stage = progress == null
             ? t('common.working')
             : t('stage.${progress.stage.name}');
-        final detail = progress?.detail ?? '';
 
         return Card(
           margin: EdgeInsets.zero,
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -103,7 +57,7 @@ class _ScanStatusPanelState extends State<ScanStatusPanel> {
                   children: [
                     Expanded(
                       child: Text(
-                        detail.isEmpty ? stage : '$stage · $detail',
+                        stage,
                         overflow: TextOverflow.ellipsis,
                         style: theme.textTheme.bodyMedium,
                       ),
@@ -124,10 +78,10 @@ class _ScanStatusPanelState extends State<ScanStatusPanel> {
                             ?.copyWith(fontWeight: FontWeight.w600),
                       ),
                     ],
-                    if (monitor.running && widget.onCancel != null) ...[
+                    if (monitor.running && onCancel != null) ...[
                       const SizedBox(width: 8),
                       TextButton(
-                        onPressed: widget.onCancel,
+                        onPressed: onCancel,
                         child: Text(t('common.cancel')),
                       ),
                     ],
@@ -142,34 +96,6 @@ class _ScanStatusPanelState extends State<ScanStatusPanel> {
                         ? null
                         : progress.percent / 100,
                   ),
-                ),
-                const SizedBox(height: 12),
-                Container(
-                  height: 132,
-                  decoration: BoxDecoration(
-                    color: scheme.surfaceContainerHighest.withValues(alpha: 0.4),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: monitor.log.isEmpty
-                      ? const SizedBox.shrink()
-                      : ListView.builder(
-                          controller: _controller,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 8,
-                          ),
-                          itemCount: monitor.log.length,
-                          itemExtent: 18,
-                          itemBuilder: (context, index) => Text(
-                            monitor.log[index],
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              fontFamily: 'Consolas',
-                              color: scheme.onSurfaceVariant,
-                            ),
-                          ),
-                        ),
                 ),
               ],
             ),

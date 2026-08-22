@@ -34,6 +34,11 @@ class TidyPikaApp extends StatelessWidget {
       // Segoe UI carries no Hangul, so Malgun Gothic backs it for Korean.
       fontFamily: 'Segoe UI',
       fontFamilyFallback: const ['Malgun Gothic'],
+      // Every input — plain fields and the menus that wrap one — shares this,
+      // so they line up at the same height wherever they sit side by side.
+      inputDecorationTheme: const InputDecorationTheme(
+        border: OutlineInputBorder(),
+      ),
     );
   }
 }

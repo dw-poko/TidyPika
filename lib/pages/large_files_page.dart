@@ -124,7 +124,7 @@ class _LargeFilesPageState extends State<LargeFilesPage> {
 
   @override
   Widget build(BuildContext context) {
-    final showStatus = _busy || _monitor.log.isNotEmpty;
+    final showStatus = _busy || _monitor.progress != null;
     final selectedBytes = _results
         .where((entry) => _selected.contains(entry.path))
         .fold(0, (sum, entry) => sum + entry.size);
@@ -141,7 +141,6 @@ class _LargeFilesPageState extends State<LargeFilesPage> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(child: PathField(controller: _path, enabled: !_busy)),
               const SizedBox(width: 12),
@@ -150,6 +149,9 @@ class _LargeFilesPageState extends State<LargeFilesPage> {
                 enabled: !_busy,
                 width: 180,
                 label: Text(t('large.minSize')),
+                // Matches the plain fields beside it instead of the menu's own
+                // default decoration, which is a different height.
+                inputDecorationTheme: Theme.of(context).inputDecorationTheme,
                 onSelected: (value) {
                   if (value != null) setState(() => _minSizeMb = value);
                 },
@@ -184,7 +186,6 @@ class _LargeFilesPageState extends State<LargeFilesPage> {
                       itemBuilder: (context, index) {
                         final entry = _results[index];
                         return CheckboxListTile(
-                          dense: true,
                           controlAffinity: ListTileControlAffinity.leading,
                           value: _selected.contains(entry.path),
                           onChanged: _busy

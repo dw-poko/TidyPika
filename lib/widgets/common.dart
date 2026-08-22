@@ -140,8 +140,6 @@ class PathField extends StatelessWidget {
       enabled: enabled,
       decoration: InputDecoration(
         labelText: t('common.folder'),
-        isDense: true,
-        border: const OutlineInputBorder(),
         suffixIcon: PopupMenuButton<String>(
           enabled: enabled,
           icon: const Icon(Icons.storage_outlined),

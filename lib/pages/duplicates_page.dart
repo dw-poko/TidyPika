@@ -131,7 +131,7 @@ class _DuplicatesPageState extends State<DuplicatesPage> {
 
   @override
   Widget build(BuildContext context) {
-    final showStatus = _busy || _monitor.log.isNotEmpty;
+    final showStatus = _busy || _monitor.progress != null;
     final wasted = _groups.fold(0, (sum, group) => sum + group.wastedSize);
 
     return PageScaffold(
@@ -269,7 +269,6 @@ class _GroupCard extends StatelessWidget {
           ),
           for (final file in group.files)
             CheckboxListTile(
-              dense: true,
               controlAffinity: ListTileControlAffinity.leading,
               value: selected.contains(file),
               onChanged: enabled
