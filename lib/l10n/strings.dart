@@ -117,6 +117,9 @@ const Map<String, String> _en = {
   'quick.clean': 'Clean selected',
   'quick.recycle': 'Send to Recycle Bin',
   'quick.selected': '{0} selected · {1}',
+  'quick.showFiles': 'Show files',
+  'quick.hideFiles': 'Hide files',
+  'quick.more': '{0} more files not shown',
 
   'large.title': 'Large Files',
   'large.subtitle': 'Track down the files using the most space',
@@ -197,6 +200,9 @@ const Map<String, String> _ko = {
   'quick.clean': '선택 항목 삭제',
   'quick.recycle': '휴지통으로 보내기',
   'quick.selected': '{0}개 선택 · {1}',
+  'quick.showFiles': '파일 목록 보기',
+  'quick.hideFiles': '파일 목록 숨기기',
+  'quick.more': '파일 {0}개는 표시하지 않았습니다',
 
   'large.title': '대용량 파일',
   'large.subtitle': '공간을 가장 많이 쓰는 파일을 찾습니다',
