@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="assets/mascot-files.png" alt="TidyPika mascot" width="180">
+<img src="assets/mascot.png" alt="TidyPika mascot" width="200">
 
 # TidyPika
 
@@ -9,6 +9,7 @@
 
 [![Flutter](https://img.shields.io/badge/Flutter-stable-02569B)](https://flutter.dev)
 [![Material 3](https://img.shields.io/badge/Material-3-6750A4)](https://m3.material.io)
+![Code](https://img.shields.io/badge/code-100%25%20AI--written-8A2BE2)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 ![Platform](https://img.shields.io/badge/platform-Windows%2010%2F11%20x64-informational)
 
@@ -26,6 +27,13 @@ dumps, oversized files, duplicates — and lets you clear it out safely.
 Built with **Flutter** and **Material 3**, so the interface is Google's own
 Material design rather than an imitation of it. The whole app is an 11 MB
 download that unpacks to 27 MB.
+
+> [!NOTE]
+> **Every line of code in this repository was written by AI.** The Dart, the
+> Win32 interop, the single-file launcher and the CI workflow were all produced
+> by Claude from a person's requirements and review — none of it was hand-written
+> by a human. This is a tool that deletes files, so read the source before you
+> point it at anything you care about.
 
 ### Features
 
@@ -134,10 +142,6 @@ come from three small hand-written `dart:ffi` bindings in `core/win32.dart`
 rather than a bindings package, which keeps the dependency list and the struct
 layout under direct control.
 
-<div align="center">
-<img src="assets/mascot-recycle.png" alt="TidyPika at the recycle bin" width="160">
-</div>
-
 ### Safety
 
 `cleaner.dart` refuses to delete `.sys`, `.dll`, `.exe`, `.msi`, `.inf`,
@@ -154,6 +158,12 @@ TidyPika는 디스크를 잡아먹는 것들 — 임시 파일, 브라우저 캐
 
 **Flutter**와 **Material 3**로 만들어서, 흉내낸 디자인이 아니라 Google이
 만든 머티리얼 디자인 그대로입니다. 전체 앱은 11 MB 다운로드이고 풀면 27 MB입니다.
+
+> [!NOTE]
+> **이 저장소의 모든 코드는 AI가 작성했습니다.** Dart 코드, Win32 연동, 단일 파일
+> 런처, CI 워크플로 전부 사람의 요구사항과 리뷰를 받아 Claude가 만들었습니다.
+> 사람이 직접 손으로 쓴 코드는 없습니다. 파일을 삭제하는 도구인 만큼, 중요한
+> 대상에 쓰기 전에 소스를 확인해 보시길 권합니다.
 
 ### 기능
 
@@ -258,10 +268,6 @@ tools/
 **Win32 연동.** 드라이브 용량, 휴지통 삭제, UI 언어는 바인딩 패키지 대신
 `core/win32.dart`에 직접 작성한 작은 `dart:ffi` 바인딩 3개를 씁니다. 의존성
 목록과 구조체 레이아웃을 직접 통제하기 위해서입니다.
-
-<div align="center">
-<img src="assets/mascot-recycle.png" alt="휴지통 앞의 TidyPika" width="160">
-</div>
 
 ### 안전장치
 
