@@ -110,10 +110,26 @@ jobs:
             throw "System.IO.Compression.dll is missing from $framework"
           }
 
+          # pubspec is the one place the version is written down. Its
+          # 0.0.1+1 form is major.minor.patch+build; a Win32 version resource
+          # wants four numbers, so the build number becomes the fourth.
+          $line = Get-Content pubspec.yaml |
+            Select-String '^version:\s*(.+)$' | Select-Object -First 1
+          if (-not $line) { throw 'pubspec.yaml carries no version' }
+
+          $parts = $line.Matches[0].Groups[1].Value.Trim() -split '\+'
+          $version = if ($parts.Count -gt 1) {
+            "$($parts[0]).$($parts[1])"
+          } else {
+            "$($parts[0]).0"
+          }
+          Write-Host "launcher version: $version"
+
           $source = 'launcher.generated.cs'
           (Get-Content tools/launcher.cs -Raw).Replace(
             'BUILD_ID_PLACEHOLDER',
-            $env:GITHUB_SHA.Substring(0, 12)) | Set-Content $source
+            $env:GITHUB_SHA.Substring(0, 12)).Replace(
+            'VERSION_PLACEHOLDER', $version) | Set-Content $source
 
           & $csc /nologo /target:winexe /optimize+ /out:TidyPika.exe `
             "/resource:$payload,$payload" `
@@ -155,10 +171,15 @@ jobs:
             '- `TidyPika-win-x64.zip`: the plain folder build.',
             '',
             'Flutter keeps its engine and assets as separate files, so the',
-            'single-file download is a launcher that unpacks once into a temp',
-            'directory and starts the app from there. It is unsigned, so',
-            'Windows may show a SmartScreen prompt; the folder build is the',
-            'same app if that gets in the way.',
+            'single-file download is a launcher that unpacks once into',
+            '`%LOCALAPPDATA%\TidyPika` and starts the app from there.',
+            '',
+            'Neither file is code-signed, so Windows may show a SmartScreen',
+            'prompt, and Defender sometimes flags the single file as',
+            '`Trojan:Win32/Wacatac.B!ml`. An `!ml` verdict is a',
+            'machine-learning guess about an unfamiliar file rather than a',
+            'match against known malware. The folder build is the same app if',
+            'either gets in the way.',
             '',
             'Requires Windows 10 1809 or newer, x64.',
             '',

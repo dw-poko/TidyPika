@@ -65,9 +65,17 @@ Grab the latest [release](../../releases):
 
 Flutter keeps its engine and assets as separate files on disk, so the
 single-file build is a launcher rather than one genuine binary: it unpacks
-once into a temp directory and starts the app from there. It is unsigned, so
-Windows may show a SmartScreen prompt; the folder build is the same app if
-that gets in the way.
+once into `%LOCALAPPDATA%\TidyPika` and starts the app from there, clearing
+out the previous build as it goes.
+
+Neither download is code-signed, so Windows may show a SmartScreen prompt, and
+Defender sometimes flags the single file as `Trojan:Win32/Wacatac.B!ml`. An
+`!ml` verdict is not a match against known malware — it is a machine-learning
+guess about an unfamiliar file, and an unsigned self-extracting launcher that
+nobody has downloaded yet is exactly the shape it guesses at. The folder build
+is the same app if either gets in the way, and every build here is produced in
+the open by [`.github/workflows/build.yml`](.github/workflows/build.yml) from
+the source in this repository.
 
 Every push to `main` also publishes both as
 [build artifacts](../../actions), which is where to look for a change that has
@@ -193,9 +201,18 @@ Windows·사용자 임시 폴더, Prefetch, 썸네일 캐시, Windows Update 다
   `flutter_windows.dll`, `data/`.
 
 Flutter는 엔진과 에셋을 디스크에 별도 파일로 두기 때문에, 단일 파일 빌드는
-진짜 단일 바이너리가 아니라 **런처**입니다. 처음 실행할 때 임시 폴더에 한 번
-풀고 거기서 앱을 띄웁니다. 서명이 없어서 Windows가 SmartScreen 경고를 띄울 수
-있는데, 그게 거슬리면 폴더 빌드를 쓰시면 됩니다 — 같은 앱입니다.
+진짜 단일 바이너리가 아니라 **런처**입니다. 처음 실행할 때
+`%LOCALAPPDATA%\TidyPika`에 한 번 풀고 거기서 앱을 띄우며, 이전 빌드는 그때
+정리합니다.
+
+두 파일 모두 코드 서명이 없어서 Windows가 SmartScreen 경고를 띄울 수 있고,
+Defender가 단일 파일을 `Trojan:Win32/Wacatac.B!ml`로 잡기도 합니다. `!ml`
+판정은 알려진 악성코드와 일치했다는 뜻이 아니라 처음 보는 파일에 대한 머신러닝
+추측이고, 서명도 배포 이력도 없는 자체 압축 해제 런처가 바로 그 추측에 걸리는
+형태입니다. 둘 중 하나라도 거슬리면 폴더 빌드를 쓰시면 됩니다 — 같은 앱이고,
+모든 빌드는 이 저장소의 소스로
+[`.github/workflows/build.yml`](.github/workflows/build.yml)이 공개된 자리에서
+만듭니다.
 
 `main`에 푸시할 때마다 동일한 두 파일이
 [빌드 아티팩트](../../actions)로도 올라갑니다. 아직 태그되지 않은 변경사항은
