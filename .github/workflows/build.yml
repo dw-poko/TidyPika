@@ -83,72 +83,33 @@ jobs:
           retention-days: 30
 
       - name: Build the single-file executable
-        # Flutter keeps its engine DLL and assets as separate files on disk, so
-        # there is no genuine one-file target. This wraps the folder in a 7-Zip
-        # self-extractor: one executable that unpacks to a temp directory and
-        # launches the app.
+        # tools/launcher.cs carries the folder as an embedded zip and unpacks it
+        # on first run. Compiled against .NET Framework with the compiler that
+        # ships in Windows, so this needs nothing downloaded and the result
+        # needs no runtime installed.
         run: |
-          $sevenZip = 'C:\Program Files\7-Zip\7z.exe'
-          if (-not (Test-Path $sevenZip)) { throw '7-Zip is not installed' }
+          $payload = 'payload.zip'
+          Compress-Archive -Path "$env:RELEASE_DIR\*" -DestinationPath $payload -Force
 
-          # The SFX modules ship in the "extra" package rather than the normal
-          # install, and its filename carries the version — so read the name off
-          # the download page instead of guessing at version numbers.
-          $page = Invoke-WebRequest 'https://www.7-zip.org/download.html' `
-            -UseBasicParsing
-          $names = [regex]::Matches($page.Content, '7z[0-9]+-extra\.7z') |
-            ForEach-Object { $_.Value } | Select-Object -Unique
-          if (-not $names) { throw 'no extra package is linked on the download page' }
-          Write-Host "extra packages offered: $($names -join ', ')"
+          $csc = Join-Path $env:WINDIR 'Microsoft.NET\Framework64\v4.0.30319\csc.exe'
+          if (-not (Test-Path $csc)) { throw "no C# compiler at $csc" }
 
-          $downloaded = $false
-          foreach ($name in $names) {
-            $url = "https://www.7-zip.org/a/$name"
-            try {
-              Write-Host "fetching $url"
-              Invoke-WebRequest $url -OutFile extra.7z -UseBasicParsing
-              $downloaded = $true
-              break
-            } catch {
-              Write-Host "  failed: $($_.Exception.Message)"
-            }
+          $framework = Split-Path $csc
+          $compression = Join-Path $framework 'System.IO.Compression.dll'
+          if (-not (Test-Path $compression)) {
+            throw "System.IO.Compression.dll is missing from $framework"
           }
-          if (-not $downloaded) { throw 'could not download the 7-Zip extra package' }
 
-          & $sevenZip x extra.7z -oextra -y | Out-Null
+          $source = 'launcher.generated.cs'
+          (Get-Content tools/launcher.cs -Raw).Replace(
+            'BUILD_ID_PLACEHOLDER',
+            $env:GITHUB_SHA.Substring(0, 12)) | Set-Content $source
 
-          # Only the installer modules honour the RunProgram config; the name
-          # has changed across releases, so try each in order of preference.
-          $available = Get-ChildItem extra -Recurse -File -Filter *.sfx
-          Write-Host "sfx modules in package: $($available.Name -join ', ')"
-
-          $module = $null
-          foreach ($name in '7zSD.sfx', '7zS2.sfx', '7zS.sfx') {
-            $module = $available | Where-Object { $_.Name -eq $name } |
-              Select-Object -First 1
-            if ($module) { break }
-          }
-          if (-not $module) {
-            throw "no installer SFX module in the package: $($available.Name -join ', ')"
-          }
-          Write-Host "sfx module: $($module.Name)"
-
-          # Plain LZMA rather than the LZMA2 default: the smaller SFX modules
-          # cannot decode LZMA2.
-          & $sevenZip a -t7z -m0=lzma -mx=9 payload.7z "$env:RELEASE_DIR\*" | Out-Null
-
-          $config = ";!@Install@!UTF-8!`r`n" +
-            "RunProgram=`"TidyPika.exe`"`r`n" +
-            "GUIMode=`"2`"`r`n" +
-            ";!@InstallEnd@!`r`n"
-          [System.IO.File]::WriteAllText(
-            "$PWD\config.txt",
-            $config,
-            (New-Object System.Text.UTF8Encoding($false)))
-
-          $copy = 'copy /b "{0}" + config.txt + payload.7z TidyPika.exe' `
-            -f $module.FullName
-          cmd /c $copy
+          & $csc /nologo /target:winexe /optimize+ /out:TidyPika.exe `
+            "/resource:$payload,$payload" `
+            "/reference:$compression" `
+            $source
+          if ($LASTEXITCODE -ne 0) { throw "the launcher failed to compile" }
 
           if (-not (Test-Path TidyPika.exe)) {
             throw 'the single-file build produced nothing'
