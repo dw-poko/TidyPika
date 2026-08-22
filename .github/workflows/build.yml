@@ -3,6 +3,7 @@ name: build
 on:
   push:
     branches: [ main ]
+    tags: [ 'v*' ]
   pull_request:
     branches: [ main ]
   workflow_dispatch:
@@ -12,6 +13,10 @@ jobs:
     # Flutter's Windows target needs the MSVC toolchain, so this cannot build
     # on Linux.
     runs-on: windows-latest
+
+    # Needed only by the release step, which runs on tags.
+    permissions:
+      contents: write
 
     steps:
       - uses: actions/checkout@v4
@@ -123,3 +128,45 @@ jobs:
           name: TidyPika-exe
           path: TidyPika.exe
           retention-days: 30
+
+      - name: Publish the release
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Built as an array rather than a here-string: a here-string
+          # terminator has to sit at column zero, which YAML block indentation
+          # makes easy to get wrong.
+          $notes = @(
+            'First tagged build.',
+            '',
+            '### Downloads',
+            '',
+            '- `TidyPika.exe`: one file, nothing to unpack or install.',
+            '- `TidyPika-win-x64.zip`: the plain folder build.',
+            '',
+            'Flutter keeps its engine and assets as separate files, so the',
+            'single-file download is a launcher that unpacks once into a temp',
+            'directory and starts the app from there. It is unsigned, so',
+            'Windows may show a SmartScreen prompt; the folder build is the',
+            'same app if that gets in the way.',
+            '',
+            'Requires Windows 10 1809 or newer, x64.',
+            '',
+            '### What it does',
+            '',
+            '- Quick Clean across eleven cache and temp locations',
+            '- Large file finder, above a size you choose',
+            '- Duplicate detection confirmed by SHA-256 content hash',
+            '- Per-folder disk analysis',
+            '- Deletion to the Recycle Bin by default, system binaries excluded',
+            '- Korean and English, switchable without a restart'
+          ) -join "`n"
+          Set-Content -Path release-notes.md -Value $notes -Encoding utf8
+
+          gh release create $env:GITHUB_REF_NAME `
+            TidyPika.exe `
+            TidyPika-win-x64.zip `
+            --title "TidyPika $env:GITHUB_REF_NAME" `
+            --notes-file release-notes.md
+          if ($LASTEXITCODE -ne 0) { throw 'the release could not be created' }

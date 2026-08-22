@@ -40,11 +40,15 @@ and the pip and npm package caches.
 
 ## Install
 
-The latest [build](../../actions) publishes two artifacts:
+Grab the latest [release](../../releases):
 
-- **`TidyPika-exe`** — a single `TidyPika.exe`. Nothing to unpack or install.
-- **`TidyPika-folder`** — the plain build: `TidyPika.exe`,
+- **`TidyPika.exe`** — a single file. Nothing to unpack or install.
+- **`TidyPika-win-x64.zip`** — the plain build: `TidyPika.exe`,
   `flutter_windows.dll` and `data/`.
+
+Every push to `main` also publishes the same two as
+[build artifacts](../../actions), which is where to look for a change that has
+not been tagged yet.
 
 Flutter keeps its engine and assets as separate files on disk, so the
 single-file build is a self-extractor rather than one genuine binary: it
