@@ -92,22 +92,34 @@ jobs:
           if (-not (Test-Path $sevenZip)) { throw '7-Zip is not installed' }
 
           # The SFX modules ship in the "extra" package rather than the normal
-          # install, and its filename carries the version.
-          $module = $null
-          foreach ($version in '2409', '2408', '2301') {
+          # install, and its filename carries the version — so read the name off
+          # the download page instead of guessing at version numbers.
+          $page = Invoke-WebRequest 'https://www.7-zip.org/download.html' `
+            -UseBasicParsing
+          $names = [regex]::Matches($page.Content, '7z[0-9]+-extra\.7z') |
+            ForEach-Object { $_.Value } | Select-Object -Unique
+          if (-not $names) { throw 'no extra package is linked on the download page' }
+          Write-Host "extra packages offered: $($names -join ', ')"
+
+          $downloaded = $false
+          foreach ($name in $names) {
+            $url = "https://www.7-zip.org/a/$name"
             try {
-              Invoke-WebRequest "https://www.7-zip.org/a/7z$version-extra.7z" `
-                -OutFile extra.7z -UseBasicParsing
-              & $sevenZip x extra.7z -oextra -y | Out-Null
-              $module = Get-ChildItem extra -Recurse -File |
-                Where-Object { $_.Name -in '7zSD.sfx', '7zS.sfx' } |
-                Sort-Object Name -Descending | Select-Object -First 1
-              if ($module) { break }
+              Write-Host "fetching $url"
+              Invoke-WebRequest $url -OutFile extra.7z -UseBasicParsing
+              $downloaded = $true
+              break
             } catch {
-              Write-Host "7z$version-extra.7z unavailable, trying the next"
+              Write-Host "  failed: $($_.Exception.Message)"
             }
           }
-          if (-not $module) { throw 'no 7-Zip SFX module could be obtained' }
+          if (-not $downloaded) { throw 'could not download the 7-Zip extra package' }
+
+          & $sevenZip x extra.7z -oextra -y | Out-Null
+          $module = Get-ChildItem extra -Recurse -File |
+            Where-Object { $_.Name -in '7zSD.sfx', '7zS.sfx' } |
+            Sort-Object Name -Descending | Select-Object -First 1
+          if (-not $module) { throw 'the extra package carries no SFX module' }
           Write-Host "sfx module: $($module.Name)"
 
           & $sevenZip a -t7z -mx=9 payload.7z "$env:RELEASE_DIR\*" | Out-Null
