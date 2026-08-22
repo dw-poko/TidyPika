@@ -1,0 +1,23 @@
+name: tidypika
+description: A tiny Windows storage cleaner.
+publish_to: "none"
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.4.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  # Win32 calls are made through raw dart:ffi, so only the Utf16/allocator
+  # helpers are needed here rather than a full bindings package.
+  ffi: ^2.1.0
+  convert: ^3.1.1
+  crypto: ^3.0.3
+  path: ^1.9.0
+
+dev_dependencies:
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true

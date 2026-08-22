@@ -1,0 +1,23 @@
+# Dart / Flutter
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+build/
+pubspec.lock
+
+# Generated platform runner — CI scaffolds this with the SDK it builds against,
+# so it is never committed. See README for the local equivalent.
+/windows/
+
+# Packaging
+*.zip
+
+# Editors
+.idea/
+.vscode/
+*.iml
+*.swp
+
+# OS
+Thumbs.db
+.DS_Store

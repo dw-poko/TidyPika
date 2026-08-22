@@ -1,0 +1,83 @@
+name: build
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    # Flutter's Windows target needs the MSVC toolchain, so this cannot build
+    # on Linux.
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Environment
+        run: flutter doctor -v
+
+      - name: Scaffold the Windows runner
+        # The generated runner is tied to the SDK that produced it, so it is
+        # created here instead of being committed. Scaffolding into a throwaway
+        # project keeps `flutter create` from touching lib/.
+        run: |
+          $scaffold = Join-Path $env:RUNNER_TEMP 'scaffold'
+          flutter create --platforms=windows --project-name tidypika $scaffold
+          Copy-Item (Join-Path $scaffold 'windows') -Destination . -Recurse
+
+          $cmake = 'windows/CMakeLists.txt'
+          (Get-Content $cmake -Raw).Replace(
+            'set(BINARY_NAME "tidypika")',
+            'set(BINARY_NAME "TidyPika")') | Set-Content $cmake
+
+          $runner = 'windows/runner/main.cpp'
+          (Get-Content $runner -Raw).Replace(
+            'L"tidypika"', 'L"TidyPika"').Replace(
+            'Win32Window::Size size(1280, 720);',
+            'Win32Window::Size size(1240, 860);') | Set-Content $runner
+
+      - name: Restore packages
+        run: flutter pub get
+
+      - name: Build
+        run: flutter build windows --release
+
+      - name: Package
+        run: |
+          $release = Get-ChildItem build/windows -Recurse -Directory -Filter Release |
+            Select-Object -First 1
+          if (-not $release) { throw 'no Release directory produced' }
+
+          "RELEASE_DIR=$($release.FullName)" | Out-File $env:GITHUB_ENV -Append
+          Compress-Archive -Path "$($release.FullName)\*" `
+            -DestinationPath TidyPika-win-x64.zip -Force
+
+      - name: Report size
+        run: |
+          $raw = (Get-ChildItem $env:RELEASE_DIR -Recurse -File |
+            Measure-Object -Property Length -Sum).Sum
+          $zip = (Get-Item TidyPika-win-x64.zip).Length
+          Write-Host ("unpacked: {0:N1} MB" -f ($raw / 1MB))
+          Write-Host ("zipped:   {0:N1} MB" -f ($zip / 1MB))
+          Write-Host '--- largest files ---'
+          Get-ChildItem $env:RELEASE_DIR -Recurse -File |
+            Sort-Object Length -Descending | Select-Object -First 10 |
+            ForEach-Object {
+              Write-Host ("{0,8:N1} MB  {1}" -f ($_.Length / 1MB), $_.Name)
+            }
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: TidyPika-win-x64
+          path: TidyPika-win-x64.zip
+          retention-days: 30
