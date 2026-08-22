@@ -116,13 +116,26 @@ jobs:
           if (-not $downloaded) { throw 'could not download the 7-Zip extra package' }
 
           & $sevenZip x extra.7z -oextra -y | Out-Null
-          $module = Get-ChildItem extra -Recurse -File |
-            Where-Object { $_.Name -in '7zSD.sfx', '7zS.sfx' } |
-            Sort-Object Name -Descending | Select-Object -First 1
-          if (-not $module) { throw 'the extra package carries no SFX module' }
+
+          # Only the installer modules honour the RunProgram config; the name
+          # has changed across releases, so try each in order of preference.
+          $available = Get-ChildItem extra -Recurse -File -Filter *.sfx
+          Write-Host "sfx modules in package: $($available.Name -join ', ')"
+
+          $module = $null
+          foreach ($name in '7zSD.sfx', '7zS2.sfx', '7zS.sfx') {
+            $module = $available | Where-Object { $_.Name -eq $name } |
+              Select-Object -First 1
+            if ($module) { break }
+          }
+          if (-not $module) {
+            throw "no installer SFX module in the package: $($available.Name -join ', ')"
+          }
           Write-Host "sfx module: $($module.Name)"
 
-          & $sevenZip a -t7z -mx=9 payload.7z "$env:RELEASE_DIR\*" | Out-Null
+          # Plain LZMA rather than the LZMA2 default: the smaller SFX modules
+          # cannot decode LZMA2.
+          & $sevenZip a -t7z -m0=lzma -mx=9 payload.7z "$env:RELEASE_DIR\*" | Out-Null
 
           $config = ";!@Install@!UTF-8!`r`n" +
             "RunProgram=`"TidyPika.exe`"`r`n" +
