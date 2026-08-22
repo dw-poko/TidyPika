@@ -6,8 +6,8 @@ TidyPika finds what is eating your disk — temp files, browser caches, crash
 dumps, oversized files, duplicates — and lets you clear it out safely.
 
 Built with **Flutter** and **Material 3**, so the interface is Google's own
-Material design rather than an imitation of it, and the whole app ships in
-about 25 MB.
+Material design rather than an imitation of it. The whole app is an 11 MB
+download that unpacks to 27 MB.
 
 ![Flutter](https://img.shields.io/badge/Flutter-stable-02569B)
 ![Material 3](https://img.shields.io/badge/Material-3-6750A4)
@@ -42,7 +42,7 @@ and the pip and npm package caches.
 
 Download `TidyPika-win-x64.zip` from the latest [build](../../actions), extract
 it anywhere, and run `TidyPika.exe`. No installer and no runtime download — the
-Flutter engine ships inside the folder.
+Flutter engine ships alongside the executable in `flutter_windows.dll`.
 
 Windows 10 1809 or newer, x64. The app expects the Microsoft Visual C++
 runtime, which almost every Windows install already has.
