@@ -111,6 +111,7 @@ const Map<String, String> _en = {
   'nav.quick': 'Quick Clean',
   'nav.large': 'Large Files',
   'nav.duplicates': 'Duplicates',
+  'nav.reclaim': 'Reclaim Space',
   'nav.analyze': 'Disk Analysis',
 
   'home.title': 'Dashboard',
@@ -118,6 +119,10 @@ const Map<String, String> _en = {
   'home.free': 'free',
   'home.usage': '{0} of {1} used',
   'home.refresh': 'Refresh',
+
+  'reclaim.title': 'Reclaim Space',
+  'reclaim.subtitle':
+      'Space Windows sets aside for itself, used or not',
 
   'quick.title': 'Quick Clean',
   'quick.subtitle': 'Find and remove temporary files, caches and logs',
@@ -290,6 +295,7 @@ const Map<String, String> _ko = {
   'nav.quick': '빠른 정리',
   'nav.large': '대용량 파일',
   'nav.duplicates': '중복 파일',
+  'nav.reclaim': '용량 줄이기',
   'nav.analyze': '디스크 분석',
 
   'home.title': '대시보드',
@@ -297,6 +303,9 @@ const Map<String, String> _ko = {
   'home.free': '사용 가능',
   'home.usage': '{1} 중 {0} 사용',
   'home.refresh': '새로 고침',
+
+  'reclaim.title': '용량 줄이기',
+  'reclaim.subtitle': 'Windows가 쓰든 안 쓰든 미리 잡아두는 공간',
 
   'quick.title': '빠른 정리',
   'quick.subtitle': '임시 파일, 캐시, 로그를 찾아 삭제합니다',
@@ -463,6 +472,7 @@ const Map<String, String> _ja = {
   'nav.quick': 'クイッククリーン',
   'nav.large': '大きいファイル',
   'nav.duplicates': '重複ファイル',
+  'nav.reclaim': '容量を空ける',
   'nav.analyze': 'ディスク分析',
 
   'home.title': 'ダッシュボード',
@@ -470,6 +480,9 @@ const Map<String, String> _ja = {
   'home.free': '空き',
   'home.usage': '{1} 中 {0} 使用',
   'home.refresh': '更新',
+
+  'reclaim.title': '容量を空ける',
+  'reclaim.subtitle': 'Windows が使う使わないに関わらず確保している領域',
 
   'quick.title': 'クイッククリーン',
   'quick.subtitle': '一時ファイル、キャッシュ、ログを探して削除します',
@@ -637,6 +650,7 @@ const Map<String, String> _zh = {
   'nav.quick': '快速清理',
   'nav.large': '大文件',
   'nav.duplicates': '重复文件',
+  'nav.reclaim': '释放空间',
   'nav.analyze': '磁盘分析',
 
   'home.title': '概览',
@@ -644,6 +658,9 @@ const Map<String, String> _zh = {
   'home.free': '可用',
   'home.usage': '已用 {0}，共 {1}',
   'home.refresh': '刷新',
+
+  'reclaim.title': '释放空间',
+  'reclaim.subtitle': 'Windows 无论是否使用都会预留的空间',
 
   'quick.title': '快速清理',
   'quick.subtitle': '查找并删除临时文件、缓存和日志',

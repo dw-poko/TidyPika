@@ -7,6 +7,7 @@ import 'pages/duplicates_page.dart';
 import 'pages/home_page.dart';
 import 'pages/large_files_page.dart';
 import 'pages/quick_clean_page.dart';
+import 'pages/reclaim_page.dart';
 import 'widgets/common.dart';
 
 class TidyPikaApp extends StatelessWidget {
@@ -88,6 +89,7 @@ class _AppShellState extends State<AppShell> {
     QuickCleanPage(),
     LargeFilesPage(),
     DuplicatesPage(),
+    ReclaimPage(),
     AnalyzePage(),
   ];
 
@@ -149,6 +151,11 @@ class _AppShellState extends State<AppShell> {
                 icon: const Icon(Icons.content_copy_outlined),
                 selectedIcon: const Icon(Icons.content_copy),
                 label: Text(t('nav.duplicates')),
+              ),
+              NavigationRailDestination(
+                icon: const Icon(Icons.tune_outlined),
+                selectedIcon: const Icon(Icons.tune),
+                label: Text(t('nav.reclaim')),
               ),
               NavigationRailDestination(
                 icon: const Icon(Icons.donut_small_outlined),
