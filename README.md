@@ -155,6 +155,7 @@ lib/
 │   ├── hibernation.dart       # hiberfil.sys size, powercfg on/off
 │   ├── history.dart           # Free-space samples and the last clean
 │   ├── paths.dart             # A path as the steps that reach it
+│   ├── storage_events.dart    # Said when the app changes the disk
 │   ├── pagefile.dart          # pagefile.sys size, PagingFiles, WMI changes
 │   ├── win32.dart             # Hand-rolled FFI bindings
 │   └── tasks.dart             # Isolate plumbing and progress streaming

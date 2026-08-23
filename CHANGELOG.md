@@ -4,6 +4,10 @@
 
 ### Added
 
+- **The dashboard keeps up.** Cleaning on another page, emptying the Recycle
+  Bin, or turning hibernation off now refreshes the dashboard's figures. It is
+  kept alive behind the other pages rather than rebuilt when you return to it,
+  so until now it went on showing the free space it read at startup.
 - **Scans say how long they took.** The status strip counts while one runs and
   keeps the total once it stops, cancelled or finished, on every page that
   scans.

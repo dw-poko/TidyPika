@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../app.dart';
@@ -7,6 +9,7 @@ import '../core/history.dart';
 import '../core/models.dart';
 import '../core/pagefile.dart';
 import '../core/size_formatter.dart';
+import '../core/storage_events.dart';
 import '../core/win32.dart';
 import '../l10n/strings.dart';
 import '../widgets/common.dart';
@@ -30,11 +33,25 @@ class _HomePageState extends State<HomePage> {
 
   History _history = const History(samples: [], lastClean: null);
   bool _emptying = false;
+  StreamSubscription<void>? _changes;
 
   @override
   void initState() {
     super.initState();
     _load();
+
+    // The dashboard is kept alive in an IndexedStack, so without this it goes
+    // on showing the free space it read at startup however much has been
+    // cleaned since.
+    _changes = storageChanged.listen((_) {
+      if (mounted) _load();
+    });
+  }
+
+  @override
+  void dispose() {
+    _changes?.cancel();
+    super.dispose();
   }
 
   void _load() {
@@ -133,6 +150,8 @@ class _HomePageState extends State<HomePage> {
     final emptied = emptyRecycleBin();
     if (!mounted) return;
     setState(() => _emptying = false);
+
+    if (emptied) announceStorageChanged();
 
     if (!emptied) {
       await showErrorDialog(context, t('home.recycleFailed'));
@@ -524,4 +543,3 @@ class _LastCleanTile extends StatelessWidget {
     );
   }
 }
-

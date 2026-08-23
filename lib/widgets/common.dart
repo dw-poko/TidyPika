@@ -5,6 +5,7 @@ import 'package:path/path.dart' as p;
 
 import '../core/disk_scanner.dart';
 import '../core/history.dart';
+import '../core/storage_events.dart';
 import '../core/models.dart';
 import '../core/size_formatter.dart';
 import '../core/win32.dart';
@@ -404,6 +405,7 @@ Future<void> showCleanResult(BuildContext context, CleanResult result) {
   // Every page's clean ends here, which makes it the one place the dashboard
   // can be told what happened without three call sites to keep in step.
   recordClean(files: result.deleted, bytes: result.freedBytes);
+  announceStorageChanged();
 
   return showDialog<void>(
     context: context,

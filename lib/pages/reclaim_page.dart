@@ -4,6 +4,7 @@ import '../core/disk_scanner.dart';
 import '../core/hibernation.dart';
 import '../core/pagefile.dart';
 import '../core/size_formatter.dart';
+import '../core/storage_events.dart';
 import '../core/win32.dart';
 import '../l10n/strings.dart';
 import '../widgets/common.dart';
@@ -101,6 +102,8 @@ class _ReclaimPageState extends State<ReclaimPage> {
       );
     }
 
+    if (result.exitCode == 0) announceStorageChanged();
+
     if (!mounted) return;
     _load();
   }
@@ -126,6 +129,8 @@ class _ReclaimPageState extends State<ReclaimPage> {
     final result = await setHibernation(enabled: enabled);
     if (!mounted) return;
     setState(() => _busy = false);
+
+    if (result.exitCode == 0) announceStorageChanged();
 
     if (result.exitCode != 0) {
       // powercfg says why in the language Windows is installed in, which is
@@ -469,8 +474,7 @@ class _PagefileDialogState extends State<_PagefileDialog> {
   }
 
   String _label(PagefileMode mode) => switch (mode) {
-        PagefileMode.custom =>
-          tf('page.optionCustom', [systemDriveRoot()]),
+        PagefileMode.custom => tf('page.optionCustom', [systemDriveRoot()]),
         PagefileMode.none => t('page.optionNone'),
         _ => t('page.optionAuto'),
       };
