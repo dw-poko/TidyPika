@@ -90,6 +90,8 @@ Pointer<Utf16> toPathList(List<String> paths, Allocator allocator) {
 int primaryUiLanguage() => getUserDefaultUILanguage() & 0x3FF;
 
 const int langKorean = 0x12;
+const int langJapanese = 0x11;
+const int langChinese = 0x04;
 
 final int Function() getCurrentProcess = _kernel32
     .lookupFunction<IntPtr Function(), int Function()>('GetCurrentProcess');

@@ -253,6 +253,68 @@ Future<bool> confirmDelete(
   return confirmed ?? false;
 }
 
+/// Language picker.
+///
+/// Every option is written in its own language, so the list reads the same
+/// whichever one is set — someone who cannot read the current one can still
+/// find their way back out of it.
+class LanguageMenu extends StatelessWidget {
+  const LanguageMenu({this.extended = true, super.key});
+
+  final bool extended;
+
+  @override
+  Widget build(BuildContext context) {
+    LanguageScope.watch(context);
+
+    final scheme = Theme.of(context).colorScheme;
+    final current = language.value;
+
+    return PopupMenuButton<AppLanguage>(
+      tooltip: t('action.language'),
+      position: PopupMenuPosition.under,
+      onSelected: setLanguage,
+      itemBuilder: (context) => [
+        for (final option in AppLanguage.values)
+          PopupMenuItem<AppLanguage>(
+            value: option,
+            child: Row(
+              children: [
+                SizedBox(
+                  width: 26,
+                  child: option == current
+                      ? Icon(Icons.check, size: 16, color: scheme.primary)
+                      : null,
+                ),
+                Text(option.label),
+              ],
+            ),
+          ),
+      ],
+      child: Container(
+        padding: EdgeInsets.symmetric(
+          horizontal: extended ? 14 : 8,
+          vertical: 8,
+        ),
+        decoration: BoxDecoration(
+          border: Border.all(color: scheme.outlineVariant),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.translate, size: 18),
+            if (extended) ...[
+              const SizedBox(width: 8),
+              Text(current.label),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 /// Said once at startup, before anything is scanned.
 ///
 /// Without elevation the Windows folders are not merely undeletable — much of
@@ -275,7 +337,23 @@ class _ElevationNotice extends StatelessWidget {
     return AlertDialog(
       icon: const Icon(Icons.shield_outlined),
       title: Text(t('elevate.title')),
-      content: SizedBox(width: 460, child: Text(t('elevate.body'))),
+      content: SizedBox(
+        width: 460,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // This is the first thing the app says, and it may be saying it in
+            // a language the reader does not have.
+            const Align(
+              alignment: Alignment.centerRight,
+              child: LanguageMenu(),
+            ),
+            const SizedBox(height: 14),
+            Text(t('elevate.body')),
+          ],
+        ),
+      ),
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),

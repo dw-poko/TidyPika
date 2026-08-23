@@ -17,24 +17,52 @@ class TidyPikaApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return LanguageScope(
-      child: MaterialApp(
-        title: 'TidyPika',
-        debugShowCheckedModeBanner: false,
-        theme: _themeFor(Brightness.light),
-        darkTheme: _themeFor(Brightness.dark),
-        themeMode: ThemeMode.system,
-        home: const AppShell(),
+      // The theme chooses its font fallbacks by language, so it is built below
+      // the scope rather than above it.
+      child: Builder(
+        builder: (context) {
+          LanguageScope.watch(context);
+
+          return MaterialApp(
+            title: 'TidyPika',
+            debugShowCheckedModeBanner: false,
+            theme: _themeFor(Brightness.light),
+            darkTheme: _themeFor(Brightness.dark),
+            themeMode: ThemeMode.system,
+            home: const AppShell(),
+          );
+        },
       ),
     );
   }
+
+  /// Han characters are shared across Japanese, Chinese and Korean, and
+  /// whichever font comes first draws them — Korean-shaped hanja in a Japanese
+  /// window, if the chain is fixed. So the language in use leads, and the rest
+  /// follow: a file path can hold any script whatever the app is set to.
+  static List<String> _fallbacksFor(AppLanguage value) => switch (value) {
+        AppLanguage.japanese => const [
+            'Yu Gothic UI',
+            'Meiryo',
+            'Microsoft YaHei',
+            'Malgun Gothic',
+          ],
+        AppLanguage.chinese => const [
+            'Microsoft YaHei',
+            'SimSun',
+            'Yu Gothic UI',
+            'Malgun Gothic',
+          ],
+        _ => const ['Malgun Gothic', 'Yu Gothic UI', 'Microsoft YaHei'],
+      };
 
   ThemeData _themeFor(Brightness brightness) {
     return ThemeData(
       useMaterial3: true,
       colorScheme: ColorScheme.fromSeed(seedColor: _seed, brightness: brightness),
-      // Segoe UI carries no Hangul, so Malgun Gothic backs it for Korean.
+      // Segoe UI carries no CJK at all, so the fallbacks do that work.
       fontFamily: 'Segoe UI',
-      fontFamilyFallback: const ['Malgun Gothic'],
+      fontFamilyFallback: _fallbacksFor(language.value),
       // Every input — plain fields and the menus that wrap one — shares this,
       // so they line up at the same height wherever they sit side by side.
       inputDecorationTheme: const InputDecorationTheme(
@@ -95,17 +123,7 @@ class _AppShellState extends State<AppShell> {
                 alignment: Alignment.bottomCenter,
                 child: Padding(
                   padding: const EdgeInsets.only(bottom: 16),
-                  child: extended
-                      ? OutlinedButton.icon(
-                          onPressed: toggleLanguage,
-                          icon: const Icon(Icons.translate, size: 18),
-                          label: Text(t('action.language')),
-                        )
-                      : IconButton(
-                          onPressed: toggleLanguage,
-                          tooltip: t('action.language'),
-                          icon: const Icon(Icons.translate),
-                        ),
+                  child: LanguageMenu(extended: extended),
                 ),
               ),
             ),

@@ -190,7 +190,8 @@ jobs:
             '- Duplicate detection confirmed by SHA-256 content hash',
             '- Per-folder disk analysis',
             '- Deletion to the Recycle Bin by default, system binaries excluded',
-            '- Korean and English, switchable without a restart'
+            '- English, Korean, Japanese and Simplified Chinese,',
+            '  switchable without a restart'
           ) -join "`n"
           Set-Content -Path release-notes.md -Value $notes -Encoding utf8
 

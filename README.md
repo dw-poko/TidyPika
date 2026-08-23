@@ -47,7 +47,7 @@ download that unpacks to 27 MB.
 | **Live progress** | Stage, running file count and a real percentage |
 | **Cancel anytime** | Scans run on their own isolate and stop the moment you ask |
 | **Safe deletion** | Recycle Bin by default; system binaries are never touched |
-| **한국어 / English** | Switch language from the navigation rail, no restart |
+| **4 languages** | English, 한국어, 日本語, 简体中文 — switched from the rail, no restart |
 
 ### Cleanup targets
 
@@ -135,7 +135,7 @@ lib/
 │   ├── disk_scanner.dart      # Drive enumeration
 │   ├── win32.dart             # Hand-rolled FFI bindings
 │   └── tasks.dart             # Isolate plumbing and progress streaming
-├── l10n/strings.dart          # Korean/English tables
+├── l10n/strings.dart          # en, ko, ja, zh string tables
 ├── widgets/                   # Progress panel, shared Material pieces
 └── pages/                     # Home, QuickClean, LargeFiles, Duplicates, Analyze
 tools/
@@ -192,7 +192,7 @@ TidyPika는 디스크를 잡아먹는 것들 — 임시 파일, 브라우저 캐
 | **실시간 진행률** | 단계, 누적 파일 수, 실제 퍼센트 |
 | **언제든 취소** | 검사는 별도 isolate에서 돌아서 누르는 즉시 멈춤 |
 | **안전한 삭제** | 기본은 휴지통, 시스템 바이너리는 건드리지 않음 |
-| **한국어 / English** | 내비게이션 레일에서 전환, 재시작 불필요 |
+| **4개 언어** | English, 한국어, 日本語, 简体中文 — 레일에서 전환, 재시작 불필요 |
 
 ### 정리 대상
 
@@ -279,7 +279,7 @@ lib/
 │   ├── disk_scanner.dart      # 드라이브 열거
 │   ├── win32.dart             # 직접 작성한 FFI 바인딩
 │   └── tasks.dart             # isolate 연결과 진행률 스트리밍
-├── l10n/strings.dart          # 한국어/영어 문자열 테이블
+├── l10n/strings.dart          # 영어·한국어·일본어·중국어 문자열 테이블
 ├── widgets/                   # 진행률 패널, 공용 머티리얼 조각
 └── pages/                     # 홈, 빠른정리, 대용량, 중복, 분석
 tools/

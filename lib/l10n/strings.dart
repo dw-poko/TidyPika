@@ -5,7 +5,19 @@ import 'package:path/path.dart' as p;
 
 import '../core/win32.dart';
 
-enum AppLanguage { korean, english }
+/// Each language carries the code it is stored under and its own name, so the
+/// picker reads the same whatever the app is currently set to.
+enum AppLanguage {
+  english('en', 'English'),
+  korean('ko', '한국어'),
+  japanese('ja', '日本語'),
+  chinese('zh', '简体中文');
+
+  const AppLanguage(this.code, this.label);
+
+  final String code;
+  final String label;
+}
 
 final ValueNotifier<AppLanguage> language =
     ValueNotifier<AppLanguage>(AppLanguage.english);
@@ -31,15 +43,10 @@ void initLanguage() {
   language.addListener(() => _savePreference(language.value));
 }
 
-void toggleLanguage() {
-  language.value = language.value == AppLanguage.korean
-      ? AppLanguage.english
-      : AppLanguage.korean;
-}
+void setLanguage(AppLanguage value) => language.value = value;
 
 String t(String key) {
-  final table = language.value == AppLanguage.korean ? _ko : _en;
-  return table[key] ?? _en[key] ?? key;
+  return _tables[language.value]?[key] ?? _en[key] ?? key;
 }
 
 /// Fills `{0}`, `{1}`, ... in the looked-up string.
@@ -53,9 +60,12 @@ String tf(String key, List<Object> args) {
 
 AppLanguage _systemDefault() {
   try {
-    return primaryUiLanguage() == langKorean
-        ? AppLanguage.korean
-        : AppLanguage.english;
+    return switch (primaryUiLanguage()) {
+      langKorean => AppLanguage.korean,
+      langJapanese => AppLanguage.japanese,
+      langChinese => AppLanguage.chinese,
+      _ => AppLanguage.english,
+    };
   } catch (_) {
     return AppLanguage.english;
   }
@@ -72,11 +82,9 @@ AppLanguage? _loadPreference() {
     final file = _preferenceFile;
     if (!file.existsSync()) return null;
 
-    switch (file.readAsStringSync().trim()) {
-      case 'ko':
-        return AppLanguage.korean;
-      case 'en':
-        return AppLanguage.english;
+    final code = file.readAsStringSync().trim();
+    for (final option in AppLanguage.values) {
+      if (option.code == code) return option;
     }
   } catch (_) {
     // Falls through to the system default.
@@ -88,7 +96,7 @@ void _savePreference(AppLanguage value) {
   try {
     final file = _preferenceFile;
     file.parent.createSync(recursive: true);
-    file.writeAsStringSync(value == AppLanguage.korean ? 'ko' : 'en');
+    file.writeAsStringSync(value.code);
   } catch (_) {
     // Remembering the choice is best-effort.
   }
@@ -97,7 +105,7 @@ void _savePreference(AppLanguage value) {
 const Map<String, String> _en = {
   'app.title': 'TidyPika',
   'app.subtitle': 'Storage Cleaner',
-  'action.language': '한국어',
+  'action.language': 'Language',
 
   'nav.home': 'Home',
   'nav.quick': 'Quick Clean',
@@ -221,7 +229,7 @@ const Map<String, String> _en = {
 const Map<String, String> _ko = {
   'app.title': 'TidyPika',
   'app.subtitle': '저장소 클리너',
-  'action.language': 'English',
+  'action.language': '언어',
 
   'nav.home': '홈',
   'nav.quick': '빠른 정리',
@@ -337,4 +345,259 @@ const Map<String, String> _ko = {
   'result.close': '닫기',
 
   'error.title': '문제가 발생했습니다',
+};
+
+// Japanese.
+const Map<String, String> _ja = {
+  'app.title': 'TidyPika',
+  'app.subtitle': 'ストレージクリーナー',
+  'action.language': '言語',
+
+  'nav.home': 'ホーム',
+  'nav.quick': 'クイッククリーン',
+  'nav.large': '大きいファイル',
+  'nav.duplicates': '重複ファイル',
+  'nav.analyze': 'ディスク分析',
+
+  'home.title': 'ダッシュボード',
+  'home.subtitle': 'この PC のストレージ概要',
+  'home.free': '空き',
+  'home.usage': '{1} 中 {0} 使用',
+  'home.refresh': '更新',
+
+  'quick.title': 'クイッククリーン',
+  'quick.subtitle': '一時ファイル、キャッシュ、ログを探して削除します',
+  'quick.scan': 'スキャン',
+  'quick.clean': '選択した項目を削除',
+  'quick.recycle': 'ごみ箱に移動',
+  'quick.selected': '{0} 件選択 · {1}',
+  'quick.showFiles': 'ファイルを表示',
+  'quick.hideFiles': 'ファイルを隠す',
+  'quick.more': '他 {0} 件は表示していません',
+
+  'target.windowsTemp': 'Windows 一時ファイル',
+  'target.windowsTemp.desc': 'Windows の一時フォルダーにあるファイル',
+  'target.userTemp': 'ユーザー一時ファイル',
+  'target.userTemp.desc': 'ユーザーアカウントの一時フォルダー',
+  'target.prefetch': 'Prefetch',
+  'target.prefetch.desc': 'アプリの起動を速くするための先読みキャッシュ',
+  'target.thumbnails': 'サムネイルキャッシュ',
+  'target.thumbnails.desc': 'エクスプローラーのサムネイルデータベース',
+  'target.windowsUpdate': 'Windows Update キャッシュ',
+  'target.windowsUpdate.desc': 'ダウンロード済みの更新プログラム',
+  'target.logs': 'ログファイル',
+  'target.logs.desc': 'システムとアプリケーションのログ',
+  'target.crashDumps': 'クラッシュダンプ',
+  'target.crashDumps.desc': '異常終了したときに残るダンプファイル',
+  'target.chromeCache': 'Chrome キャッシュ',
+  'target.chromeCache.desc': 'Google Chrome のブラウザーキャッシュ',
+  'target.edgeCache': 'Edge キャッシュ',
+  'target.edgeCache.desc': 'Microsoft Edge のブラウザーキャッシュ',
+  'target.pipCache': 'pip キャッシュ',
+  'target.pipCache.desc': 'Python pip のダウンロードキャッシュ',
+  'target.npmCache': 'npm キャッシュ',
+  'target.npmCache.desc': 'Node.js npm のキャッシュ',
+
+  'elevate.title': '管理者として実行することをおすすめします',
+  'elevate.body':
+      '現在は通常の権限で実行しています。Windows Update のダウンロード、'
+      'Windows の一時フォルダー、システムログなど、管理者権限がないと'
+      '見えないファイルはスキャンから外れ、表示されても削除できません。'
+      'すべて整理するには管理者として再起動してください。',
+  'elevate.continue': 'このまま続行',
+
+  'large.title': '大きいファイル',
+  'large.subtitle': '最も容量を使っているファイルを探します',
+  'large.minSize': '最小サイズ',
+  'large.scan': 'スキャン',
+
+  'dupes.title': '重複ファイル',
+  'dupes.subtitle': 'SHA-256 ハッシュで内容が同一だと確認したファイル',
+  'dupes.scan': 'スキャン',
+  'dupes.wasted': '無駄',
+  'dupes.copies': '{0} 個の複製',
+  'dupes.groups': '{0} グループ',
+
+  'analyze.title': 'ディスク分析',
+  'analyze.subtitle': 'どのフォルダーが容量を使っているかを表示します',
+  'analyze.run': '分析',
+  'analyze.folders': '{0} フォルダー',
+
+  'col.files': 'ファイル数',
+  'col.size': 'サイズ',
+  'col.share': '割合',
+
+  'risk.low': '低',
+  'risk.medium': '中',
+  'risk.high': '高',
+
+  'stage.preparing': '準備中',
+  'stage.scanning': 'スキャン中',
+  'stage.comparing': '比較中',
+  'stage.hashing': '検証中',
+  'stage.deleting': '削除中',
+  'stage.done': '完了',
+  'status.scanned': '{0} 件',
+
+  'common.browse': '参照',
+  'common.cancel': 'キャンセル',
+  'common.selectAll': 'すべて選択',
+  'common.empty': '見つかりませんでした',
+  'common.emptyHint': 'スキャンを実行すると結果がここに表示されます。',
+  'common.working': '処理中...',
+  'common.cancelled': 'キャンセルしました',
+  'common.folder': 'フォルダー',
+
+  'confirm.title': 'これらのファイルを削除しますか?',
+  'confirm.recycle': '{0} 件 ({1}) をごみ箱に移動します。',
+  'confirm.permanent': '{0} 件 ({1}) を完全に削除します。元に戻せません。',
+  'confirm.ok': '削除',
+
+  'result.title': '削除が完了しました',
+  'result.body': '{0} 件を削除し、{1} を回収しました。',
+  'result.failures': '{0} 件は削除できませんでした:',
+  'result.moreFailures': '他 {0} 件',
+  'result.elevate': '管理者として再起動',
+  'result.elevateHint': 'Windows のフォルダーは管理者権限がないと削除できません。',
+
+  'failure.protected': '保護',
+  'failure.accessDenied': 'アクセス拒否',
+  'failure.inUse': '使用中',
+  'failure.notFound': '既にありません',
+  'failure.refused': '拒否',
+  'result.close': '閉じる',
+
+  'error.title': '問題が発生しました',
+};
+
+// Simplified Chinese.
+const Map<String, String> _zh = {
+  'app.title': 'TidyPika',
+  'app.subtitle': '存储清理工具',
+  'action.language': '语言',
+
+  'nav.home': '主页',
+  'nav.quick': '快速清理',
+  'nav.large': '大文件',
+  'nav.duplicates': '重复文件',
+  'nav.analyze': '磁盘分析',
+
+  'home.title': '概览',
+  'home.subtitle': '这台电脑的存储概况',
+  'home.free': '可用',
+  'home.usage': '已用 {0}，共 {1}',
+  'home.refresh': '刷新',
+
+  'quick.title': '快速清理',
+  'quick.subtitle': '查找并删除临时文件、缓存和日志',
+  'quick.scan': '扫描',
+  'quick.clean': '删除所选项',
+  'quick.recycle': '移到回收站',
+  'quick.selected': '已选 {0} 项 · {1}',
+  'quick.showFiles': '显示文件',
+  'quick.hideFiles': '隐藏文件',
+  'quick.more': '另有 {0} 个文件未显示',
+
+  'target.windowsTemp': 'Windows 临时文件',
+  'target.windowsTemp.desc': 'Windows 临时文件夹中的文件',
+  'target.userTemp': '用户临时文件',
+  'target.userTemp.desc': '用户账户的临时文件夹',
+  'target.prefetch': 'Prefetch',
+  'target.prefetch.desc': '用于加快应用启动的预读缓存',
+  'target.thumbnails': '缩略图缓存',
+  'target.thumbnails.desc': '资源管理器的缩略图数据库',
+  'target.windowsUpdate': 'Windows 更新缓存',
+  'target.windowsUpdate.desc': '已下载的更新安装文件',
+  'target.logs': '日志文件',
+  'target.logs.desc': '系统和应用程序日志',
+  'target.crashDumps': '崩溃转储',
+  'target.crashDumps.desc': '程序异常退出时留下的转储文件',
+  'target.chromeCache': 'Chrome 缓存',
+  'target.chromeCache.desc': 'Google Chrome 浏览器缓存',
+  'target.edgeCache': 'Edge 缓存',
+  'target.edgeCache.desc': 'Microsoft Edge 浏览器缓存',
+  'target.pipCache': 'pip 缓存',
+  'target.pipCache.desc': 'Python pip 下载缓存',
+  'target.npmCache': 'npm 缓存',
+  'target.npmCache.desc': 'Node.js npm 缓存',
+
+  'elevate.title': '建议以管理员身份运行',
+  'elevate.body':
+      '当前以普通权限运行。Windows 更新下载、Windows 临时文件夹、'
+      '系统日志等只有管理员才能看到的文件会被排除在扫描之外，'
+      '即使显示出来也无法删除。若要全部清理，请以管理员身份重新启动。',
+  'elevate.continue': '仍然继续',
+
+  'large.title': '大文件',
+  'large.subtitle': '找出占用空间最多的文件',
+  'large.minSize': '最小大小',
+  'large.scan': '扫描',
+
+  'dupes.title': '重复文件',
+  'dupes.subtitle': '通过 SHA-256 内容哈希确认内容完全相同的文件',
+  'dupes.scan': '扫描',
+  'dupes.wasted': '浪费',
+  'dupes.copies': '{0} 个副本',
+  'dupes.groups': '{0} 组',
+
+  'analyze.title': '磁盘分析',
+  'analyze.subtitle': '查看哪些文件夹占用了空间',
+  'analyze.run': '分析',
+  'analyze.folders': '{0} 个文件夹',
+
+  'col.files': '文件数',
+  'col.size': '大小',
+  'col.share': '占比',
+
+  'risk.low': '低',
+  'risk.medium': '中',
+  'risk.high': '高',
+
+  'stage.preparing': '准备中',
+  'stage.scanning': '扫描中',
+  'stage.comparing': '比较中',
+  'stage.hashing': '校验中',
+  'stage.deleting': '删除中',
+  'stage.done': '完成',
+  'status.scanned': '{0} 个文件',
+
+  'common.browse': '浏览',
+  'common.cancel': '取消',
+  'common.selectAll': '全选',
+  'common.empty': '没有找到内容',
+  'common.emptyHint': '运行扫描后，结果会显示在这里。',
+  'common.working': '正在处理...',
+  'common.cancelled': '已取消',
+  'common.folder': '文件夹',
+
+  'confirm.title': '要删除这些文件吗?',
+  'confirm.recycle': '将把 {0} 个文件（{1}）移到回收站。',
+  'confirm.permanent': '将永久删除 {0} 个文件（{1}）。此操作无法撤消。',
+  'confirm.ok': '删除',
+
+  'result.title': '清理完成',
+  'result.body': '已删除 {0} 个文件，回收 {1}。',
+  'result.failures': '有 {0} 个文件无法删除：',
+  'result.moreFailures': '另有 {0} 个',
+  'result.elevate': '以管理员身份重新启动',
+  'result.elevateHint': '未提升权限时，Windows 文件夹会拒绝删除。',
+
+  'failure.protected': '受保护',
+  'failure.accessDenied': '拒绝访问',
+  'failure.inUse': '正在使用',
+  'failure.notFound': '已不存在',
+  'failure.refused': '被拒绝',
+  'result.close': '关闭',
+
+  'error.title': '出现问题',
+};
+
+/// Every table, keyed by the language that selects it. `t` falls back to `_en`
+/// for anything a table is missing, so a gap surfaces as English rather than a
+/// raw key.
+const Map<AppLanguage, Map<String, String>> _tables = {
+  AppLanguage.english: _en,
+  AppLanguage.korean: _ko,
+  AppLanguage.japanese: _ja,
+  AppLanguage.chinese: _zh,
 };
