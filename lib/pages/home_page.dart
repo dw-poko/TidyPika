@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 
 import '../core/disk_scanner.dart';
+import '../core/hibernation.dart';
 import '../core/models.dart';
 import '../core/size_formatter.dart';
+import '../core/win32.dart';
 import '../l10n/strings.dart';
 import '../widgets/common.dart';
 
@@ -15,6 +17,8 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   List<DiskInfo> _disks = const [];
+  HibernationInfo? _hibernation;
+  bool _busy = false;
 
   @override
   void initState() {
@@ -29,7 +33,56 @@ class _HomePageState extends State<HomePage> {
     } catch (_) {
       disks = const [];
     }
-    setState(() => _disks = disks);
+
+    HibernationInfo? hibernation;
+    try {
+      hibernation = readHibernation();
+    } catch (_) {
+      hibernation = null;
+    }
+
+    setState(() {
+      _disks = disks;
+      _hibernation = hibernation;
+    });
+  }
+
+  Future<void> _setHibernation(bool enabled) async {
+    final info = _hibernation;
+    if (info == null) return;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => _HibernationConfirm(info: info, enabling: enabled),
+    );
+    if (confirmed != true || !mounted) return;
+
+    // powercfg refuses without elevation, so ask before running it into a
+    // failure the user can do nothing about from here.
+    if (!isElevated()) {
+      await showElevationNotice(context, messageKey: 'hiber.needsAdmin');
+      return;
+    }
+
+    setState(() => _busy = true);
+    final result = await setHibernation(enabled: enabled);
+    if (!mounted) return;
+    setState(() => _busy = false);
+
+    if (result.exitCode != 0) {
+      // powercfg says why in the language Windows is installed in, which is
+      // more use here than anything this app could guess.
+      final output = '${result.stdout}\n${result.stderr}'.trim();
+      await showErrorDialog(
+        context,
+        output.isEmpty
+            ? '${t('hiber.failed')}\n\nexit code ${result.exitCode}'
+            : '${t('hiber.failed')}\n\n$output',
+      );
+      if (!mounted) return;
+    }
+
+    _load();
   }
 
   @override
@@ -44,19 +97,35 @@ class _HomePageState extends State<HomePage> {
         icon: const Icon(Icons.refresh, size: 18),
         label: Text(t('home.refresh')),
       ),
-      child: _disks.isEmpty
-          ? const EmptyState(icon: Icons.storage_outlined)
-          : GridView.builder(
-              gridDelegate:
-                  const SliverGridDelegateWithMaxCrossAxisExtent(
-                maxCrossAxisExtent: 360,
-                mainAxisExtent: 152,
-                crossAxisSpacing: 16,
-                mainAxisSpacing: 16,
-              ),
-              itemCount: _disks.length,
-              itemBuilder: (context, index) => _DiskCard(disk: _disks[index]),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (_hibernation != null) ...[
+            _HibernationCard(
+              info: _hibernation!,
+              busy: _busy,
+              onChanged: _busy ? null : _setHibernation,
             ),
+            const SizedBox(height: 16),
+          ],
+          Expanded(
+            child: _disks.isEmpty
+                ? const EmptyState(icon: Icons.storage_outlined)
+                : GridView.builder(
+                    gridDelegate:
+                        const SliverGridDelegateWithMaxCrossAxisExtent(
+                      maxCrossAxisExtent: 360,
+                      mainAxisExtent: 152,
+                      crossAxisSpacing: 16,
+                      mainAxisSpacing: 16,
+                    ),
+                    itemCount: _disks.length,
+                    itemBuilder: (context, index) =>
+                        _DiskCard(disk: _disks[index]),
+                  ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -148,6 +217,112 @@ class _DiskCard extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// What the hibernation file is costing, and the switch that decides whether
+/// it exists at all.
+class _HibernationCard extends StatelessWidget {
+  const _HibernationCard({
+    required this.info,
+    required this.busy,
+    required this.onChanged,
+  });
+
+  final HibernationInfo info;
+  final bool busy;
+  final ValueChanged<bool>? onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    LanguageScope.watch(context);
+
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+
+    return Card(
+      margin: EdgeInsets.zero,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 14, 16, 14),
+        child: Row(
+          children: [
+            Icon(
+              Icons.bedtime_outlined,
+              size: 20,
+              color: scheme.onSurfaceVariant,
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(t('hiber.title'), style: theme.textTheme.titleSmall),
+                  const SizedBox(height: 2),
+                  Text(
+                    info.enabled ? info.path : t('hiber.none'),
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodySmall
+                        ?.copyWith(color: scheme.onSurfaceVariant),
+                  ),
+                ],
+              ),
+            ),
+            if (info.enabled) ...[
+              const SizedBox(width: 12),
+              Text(
+                formatSize(info.size!),
+                style: theme.textTheme.titleMedium
+                    ?.copyWith(fontWeight: FontWeight.w600),
+              ),
+            ],
+            const SizedBox(width: 16),
+            if (busy)
+              const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
+            else
+              Switch(value: info.enabled, onChanged: onChanged),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _HibernationConfirm extends StatelessWidget {
+  const _HibernationConfirm({required this.info, required this.enabling});
+
+  final HibernationInfo info;
+  final bool enabling;
+
+  @override
+  Widget build(BuildContext context) {
+    LanguageScope.watch(context);
+
+    return AlertDialog(
+      icon: const Icon(Icons.bedtime_outlined),
+      title: Text(t(enabling ? 'hiber.confirmOn' : 'hiber.confirmOff')),
+      content: SizedBox(
+        width: 440,
+        child: Text(
+          enabling
+              ? t('hiber.bodyOn')
+              : tf('hiber.bodyOff', [info.path, formatSize(info.size ?? 0)]),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(false),
+          child: Text(t('common.cancel')),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.of(context).pop(true),
+          child: Text(t(enabling ? 'hiber.enable' : 'hiber.disable')),
+        ),
+      ],
     );
   }
 }

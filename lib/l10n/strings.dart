@@ -160,6 +160,25 @@ const Map<String, String> _en = {
       'there cannot be deleted. Restart elevated to work on all of it.',
   'elevate.continue': 'Continue anyway',
 
+  'hiber.title': 'Hibernation',
+  'hiber.none': 'Off — no hibernation file on disk',
+  'hiber.confirmOn': 'Turn hibernation on?',
+  'hiber.confirmOff': 'Turn hibernation off?',
+  'hiber.bodyOn':
+      'Windows creates the hibernation file again, sized from the '
+      'memory installed in this PC — commonly several gigabytes.',
+  'hiber.bodyOff':
+      '{0} is deleted and {1} goes back to the drive. Fast Startup '
+      'uses the same file and turns off with it.',
+  'hiber.enable': 'Turn on',
+  'hiber.disable': 'Turn off',
+  'hiber.needsAdmin':
+      'Hibernation is a system setting, so changing it needs '
+      'administrator rights.',
+  'hiber.failed':
+      'powercfg could not change the setting. Its own output '
+      'follows.',
+
   'large.title': 'Large Files',
   'large.subtitle': 'Track down the files using the most space',
   'large.minSize': 'Minimum size',
@@ -282,6 +301,25 @@ const Map<String, String> _ko = {
       '검사에서 아예 빠지고, 보이더라도 삭제할 수 없습니다. 전부 정리하시려면 '
       '관리자 권한으로 다시 실행하세요.',
   'elevate.continue': '이대로 계속',
+
+  'hiber.title': '최대 절전 모드',
+  'hiber.none': '꺼짐 — 최대 절전 파일 없음',
+  'hiber.confirmOn': '최대 절전 모드를 켤까요?',
+  'hiber.confirmOff': '최대 절전 모드를 끌까요?',
+  'hiber.bodyOn':
+      'Windows가 최대 절전 파일을 다시 만듭니다. 크기는 설치된 '
+      '메모리에 따라 정해지며 보통 수 GB입니다.',
+  'hiber.bodyOff':
+      '{0}을(를) 삭제하고 {1}을(를) 드라이브에 돌려줍니다. 같은 '
+      '파일을 쓰는 빠른 시작도 함께 꺼집니다.',
+  'hiber.enable': '켜기',
+  'hiber.disable': '끄기',
+  'hiber.needsAdmin':
+      '최대 절전 모드는 시스템 설정이라 관리자 권한이 '
+      '필요합니다.',
+  'hiber.failed':
+      'powercfg가 설정을 바꾸지 못했습니다. 아래는 powercfg가 낸 '
+      '출력입니다.',
 
   'large.title': '대용량 파일',
   'large.subtitle': '공간을 가장 많이 쓰는 파일을 찾습니다',
@@ -406,6 +444,25 @@ const Map<String, String> _ja = {
       'すべて整理するには管理者として再起動してください。',
   'elevate.continue': 'このまま続行',
 
+  'hiber.title': 'ハイバネーション',
+  'hiber.none': 'オフ — ハイバネーションファイルなし',
+  'hiber.confirmOn': 'ハイバネーションを有効にしますか?',
+  'hiber.confirmOff': 'ハイバネーションを無効にしますか?',
+  'hiber.bodyOn':
+      'Windows がハイバネーションファイルを作り直します。サイズは'
+      '搭載メモリに応じて決まり、通常は数 GB です。',
+  'hiber.bodyOff':
+      '{0} を削除し、{1} をドライブに戻します。同じファイルを使う'
+      '高速スタートアップも一緒に無効になります。',
+  'hiber.enable': '有効にする',
+  'hiber.disable': '無効にする',
+  'hiber.needsAdmin':
+      'ハイバネーションはシステム設定なので管理者権限が'
+      '必要です。',
+  'hiber.failed':
+      'powercfg が設定を変更できませんでした。以下は powercfg の'
+      '出力です。',
+
   'large.title': '大きいファイル',
   'large.subtitle': '最も容量を使っているファイルを探します',
   'large.minSize': '最小サイズ',
@@ -527,6 +584,21 @@ const Map<String, String> _zh = {
       '系统日志等只有管理员才能看到的文件会被排除在扫描之外，'
       '即使显示出来也无法删除。若要全部清理，请以管理员身份重新启动。',
   'elevate.continue': '仍然继续',
+
+  'hiber.title': '休眠',
+  'hiber.none': '已关闭 — 没有休眠文件',
+  'hiber.confirmOn': '要开启休眠吗?',
+  'hiber.confirmOff': '要关闭休眠吗?',
+  'hiber.bodyOn':
+      'Windows 会重新创建休眠文件，大小取决于这台电脑的内存，'
+      '通常为数 GB。',
+  'hiber.bodyOff':
+      '将删除 {0}，并把 {1} 归还给驱动器。使用同一文件的快速启动'
+      '也会一并关闭。',
+  'hiber.enable': '开启',
+  'hiber.disable': '关闭',
+  'hiber.needsAdmin': '休眠属于系统设置，需要管理员权限。',
+  'hiber.failed': 'powercfg 未能更改设置。以下是 powercfg 的输出。',
 
   'large.title': '大文件',
   'large.subtitle': '找出占用空间最多的文件',

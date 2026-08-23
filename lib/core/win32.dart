@@ -93,6 +93,69 @@ const int langKorean = 0x12;
 const int langJapanese = 0x11;
 const int langChinese = 0x04;
 
+/// Layout of `WIN32_FILE_ATTRIBUTE_DATA`: nine DWORDs with no padding, the
+/// three FILETIME pairs written out as the halves they are.
+final class Win32FileAttributeData extends Struct {
+  @Uint32()
+  external int dwFileAttributes;
+
+  @Uint32()
+  external int creationLow;
+  @Uint32()
+  external int creationHigh;
+
+  @Uint32()
+  external int lastAccessLow;
+  @Uint32()
+  external int lastAccessHigh;
+
+  @Uint32()
+  external int lastWriteLow;
+  @Uint32()
+  external int lastWriteHigh;
+
+  @Uint32()
+  external int nFileSizeHigh;
+  @Uint32()
+  external int nFileSizeLow;
+}
+
+final int Function(Pointer<Utf16>, int, Pointer<Void>) getFileAttributesEx =
+    _kernel32.lookupFunction<
+        Int32 Function(Pointer<Utf16>, Int32, Pointer<Void>),
+        int Function(Pointer<Utf16>, int, Pointer<Void>)>(
+  'GetFileAttributesExW',
+);
+
+const int _getFileExInfoStandard = 0;
+
+/// Size of a file read from its directory entry, without opening it.
+///
+/// hiberfil.sys is held open by the system for the life of the session, so
+/// anything that wants a handle fails on it. Asking for the attributes does
+/// not open anything and answers whether or not the file is in use.
+int? fileSizeWithoutOpening(String path) {
+  final name = path.toNativeUtf16(allocator: calloc);
+  final data = calloc<Win32FileAttributeData>();
+
+  try {
+    final ok = getFileAttributesEx(
+      name,
+      _getFileExInfoStandard,
+      data.cast<Void>(),
+    );
+    if (ok == 0) return null;
+
+    return (data.ref.nFileSizeHigh << 32) | data.ref.nFileSizeLow;
+  } catch (_) {
+    return null;
+  } finally {
+    calloc
+      ..free(name)
+      ..free(data);
+  }
+}
+
 final int Function() getCurrentProcess = _kernel32
     .lookupFunction<IntPtr Function(), int Function()>('GetCurrentProcess');
 

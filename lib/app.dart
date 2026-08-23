@@ -98,7 +98,9 @@ class _AppShellState extends State<AppShell> {
     // After the first frame: there is no Navigator to hang a dialog on until
     // the shell is mounted.
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted && !isElevated()) showElevationNotice(context);
+      if (mounted && !isElevated()) {
+        showElevationNotice(context, withLanguagePicker: true);
+      }
     });
   }
 

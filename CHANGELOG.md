@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- **Hibernation on the dashboard.** What `hiberfil.sys` is costing, and a
+  switch that turns the feature on or off through `powercfg`. Windows sizes
+  the file from installed memory and reserves it whether or not the machine
+  ever hibernates, so it is often several gigabytes doing nothing. Changing
+  the setting needs administrator rights, and Fast Startup uses the same file,
+  so it turns off along with it.
+
 ## v0.0.2
 
 Quick Clean was doing less than it reported and would not say why. Most of

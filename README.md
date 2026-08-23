@@ -44,6 +44,7 @@ download that unpacks to 27 MB.
 | **Duplicates** | Byte-identical files, confirmed by SHA-256 content hash |
 | **Disk Analysis** | Which sub-folders are using the space, with share-of-total bars |
 | **Drive Overview** | Free and used space across every attached drive |
+| **Hibernation** | What `hiberfil.sys` costs, and a switch that turns the feature off |
 | **Live progress** | Stage, running file count and a real percentage |
 | **Cancel anytime** | Scans run on their own isolate and stop the moment you ask |
 | **Safe deletion** | Recycle Bin by default; system binaries are never touched |
@@ -54,6 +55,12 @@ download that unpacks to 27 MB.
 Windows and user temp directories, Prefetch, thumbnail cache, Windows Update
 downloads, system and application logs, crash dumps, Chrome and Edge caches,
 and the pip and npm package caches.
+
+The dashboard also reports what `hiberfil.sys` is costing and can turn
+hibernation off through `powercfg`, reclaiming that space. Windows sizes the
+file from installed memory and reserves it whether or not the machine ever
+hibernates. Changing the setting needs administrator rights, and Fast Startup
+uses the same file, so it turns off along with it.
 
 The targets under `C:\Windows` — Windows Update downloads above all — belong to
 SYSTEM and Administrators, and an account in the Administrators group still
@@ -134,6 +141,7 @@ lib/
 │   ├── duplicate_finder.dart  # Three-phase duplicate detection
 │   ├── cleaner.dart           # Recycle Bin / permanent deletion + guards
 │   ├── disk_scanner.dart      # Drive enumeration
+│   ├── hibernation.dart       # hiberfil.sys size, powercfg on/off
 │   ├── win32.dart             # Hand-rolled FFI bindings
 │   └── tasks.dart             # Isolate plumbing and progress streaming
 ├── l10n/strings.dart          # en, ko, ja, zh string tables
@@ -190,6 +198,7 @@ TidyPika는 디스크를 잡아먹는 것들 — 임시 파일, 브라우저 캐
 | **중복 파일** | SHA-256 내용 해시로 확인한, 바이트 단위로 동일한 파일 |
 | **디스크 분석** | 어떤 하위 폴더가 공간을 쓰는지, 전체 대비 비중 막대와 함께 |
 | **드라이브 현황** | 연결된 모든 드라이브의 여유·사용 공간 |
+| **최대 절전 모드** | `hiberfil.sys`가 차지하는 용량과, 기능을 끄는 스위치 |
 | **실시간 진행률** | 단계, 누적 파일 수, 실제 퍼센트 |
 | **언제든 취소** | 검사는 별도 isolate에서 돌아서 누르는 즉시 멈춤 |
 | **안전한 삭제** | 기본은 휴지통, 시스템 바이너리는 건드리지 않음 |
@@ -199,6 +208,12 @@ TidyPika는 디스크를 잡아먹는 것들 — 임시 파일, 브라우저 캐
 
 Windows·사용자 임시 폴더, Prefetch, 썸네일 캐시, Windows Update 다운로드,
 시스템·응용 프로그램 로그, 크래시 덤프, Chrome·Edge 캐시, pip·npm 패키지 캐시.
+
+대시보드에서 `hiberfil.sys`가 차지하는 용량을 보여주고, `powercfg`로 최대 절전
+모드를 꺼서 그 공간을 회수할 수 있습니다. Windows는 설치된 메모리 크기에 맞춰 이
+파일을 미리 잡아두며, 실제로 최대 절전을 쓰든 안 쓰든 자리를 차지합니다. 설정
+변경에는 관리자 권한이 필요하고, 빠른 시작이 같은 파일을 쓰기 때문에 함께
+꺼집니다.
 
 `C:\Windows` 아래 대상은 — 특히 Windows Update 다운로드는 — SYSTEM과
 Administrators의 소유이고, 관리자 그룹 계정이라도 권한을 올리기 전까지는 제한된

@@ -315,20 +315,35 @@ class LanguageMenu extends StatelessWidget {
   }
 }
 
-/// Said once at startup, before anything is scanned.
+/// Explains that something needs an elevated process, and offers the restart.
 ///
-/// Without elevation the Windows folders are not merely undeletable — much of
+/// The default message is the one said at startup, before anything is scanned:
+/// without elevation the Windows folders are not merely undeletable — much of
 /// what is in them cannot even be listed, so the scan under-reports and the
-/// numbers look wrong rather than restricted.
-Future<void> showElevationNotice(BuildContext context) {
+/// numbers look wrong rather than restricted. Callers blocked on elevation for
+/// their own reason pass their own key.
+Future<void> showElevationNotice(
+  BuildContext context, {
+  String messageKey = 'elevate.body',
+  bool withLanguagePicker = false,
+}) {
   return showDialog<void>(
     context: context,
-    builder: (context) => const _ElevationNotice(),
+    builder: (context) => _ElevationNotice(
+      messageKey: messageKey,
+      withLanguagePicker: withLanguagePicker,
+    ),
   );
 }
 
 class _ElevationNotice extends StatelessWidget {
-  const _ElevationNotice();
+  const _ElevationNotice({
+    required this.messageKey,
+    required this.withLanguagePicker,
+  });
+
+  final String messageKey;
+  final bool withLanguagePicker;
 
   @override
   Widget build(BuildContext context) {
@@ -343,14 +358,16 @@ class _ElevationNotice extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // This is the first thing the app says, and it may be saying it in
-            // a language the reader does not have.
-            const Align(
-              alignment: Alignment.centerRight,
-              child: LanguageMenu(),
-            ),
-            const SizedBox(height: 14),
-            Text(t('elevate.body')),
+            // The startup notice is the first thing the app says, and it may
+            // be saying it in a language the reader does not have.
+            if (withLanguagePicker) ...[
+              const Align(
+                alignment: Alignment.centerRight,
+                child: LanguageMenu(),
+              ),
+              const SizedBox(height: 14),
+            ],
+            Text(t(messageKey)),
           ],
         ),
       ),
