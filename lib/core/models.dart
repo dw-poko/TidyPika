@@ -96,6 +96,29 @@ class CleanError {
   final CleanFailure reason;
 }
 
+/// A duplicate scan and whether it saw the whole tree.
+///
+/// The walk stops at a fixed number of files so a scan of a very large tree
+/// cannot run away with memory. Stopping is defensible; not saying so is not —
+/// a partial result that looks complete is worse than no result.
+class DuplicateScan {
+  const DuplicateScan({
+    required this.groups,
+    required this.indexed,
+    required this.limit,
+  });
+
+  final List<DuplicateGroup> groups;
+
+  /// Files walked, whatever their size.
+  final int indexed;
+
+  /// The point the walk stops at.
+  final int limit;
+
+  bool get truncated => indexed >= limit;
+}
+
 class CleanResult {
   CleanResult();
 

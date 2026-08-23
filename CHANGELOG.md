@@ -4,6 +4,11 @@
 
 ### Added
 
+- **Duplicates says when it stopped early.** The walk gives up after a fixed
+  number of files so a very large tree cannot run away with memory, and until
+  now it gave up in silence — a partial result that looked complete. It now
+  says so above the results, and the limit went from a hundred thousand files
+  to four hundred thousand, which covers a user profile several times over.
 - **Disk Analysis goes in.** A folder in the results opens it, and the path
   above turns into steps that go back — so following the space down a tree no
   longer means retyping the path at every level. The analysis also counts the

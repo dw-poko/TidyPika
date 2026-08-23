@@ -39,6 +39,10 @@ class _DuplicatesPageState extends State<DuplicatesPage> {
   int _selectedBytes = 0;
   int _wasted = 0;
 
+  /// Set when the walk stopped at its limit, so the page can say the results
+  /// are only as complete as the walk was.
+  DuplicateScan? _result;
+
   bool _recycle = true;
   bool _busy = false;
   StreamSubscription<TaskEvent>? _subscription;
@@ -71,6 +75,7 @@ class _DuplicatesPageState extends State<DuplicatesPage> {
       _selected.clear();
       _selectedBytes = 0;
       _wasted = 0;
+      _result = null;
     });
 
     _subscription = findDuplicatesTask(root).listen((event) {
@@ -79,7 +84,8 @@ class _DuplicatesPageState extends State<DuplicatesPage> {
           _monitor.report(event.progress);
 
         case TaskDone():
-          final groups = (event.value! as List).cast<DuplicateGroup>();
+          final scan = event.value! as DuplicateScan;
+          final groups = scan.groups;
           _monitor.finish();
           if (!mounted) return;
 
@@ -106,6 +112,7 @@ class _DuplicatesPageState extends State<DuplicatesPage> {
 
           setState(() {
             _groups = groups;
+            _result = scan;
             _rows = rows;
             _selected
               ..clear()
@@ -198,6 +205,10 @@ class _DuplicatesPageState extends State<DuplicatesPage> {
             ),
             const SizedBox(height: 16),
           ],
+          if (_result?.truncated ?? false) ...[
+            _TruncationNotice(limit: _result!.limit),
+            const SizedBox(height: 12),
+          ],
           if (_groups.isNotEmpty) ...[
             Row(
               children: [
@@ -252,6 +263,49 @@ class _DuplicatesPageState extends State<DuplicatesPage> {
               onClean: _busy || _selected.isEmpty ? null : _clean,
             ),
           ],
+        ],
+      ),
+    );
+  }
+}
+
+/// Says so when the walk stopped before the tree did.
+///
+/// A partial result that looks complete is the worst of the three outcomes,
+/// so this sits above the results rather than in a log nobody reads.
+class _TruncationNotice extends StatelessWidget {
+  const _TruncationNotice({required this.limit});
+
+  final int limit;
+
+  @override
+  Widget build(BuildContext context) {
+    LanguageScope.watch(context);
+
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: scheme.tertiaryContainer,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.info_outline,
+            size: 18,
+            color: scheme.onTertiaryContainer,
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              tf('dupes.truncated', [formatCount(limit)]),
+              style: theme.textTheme.bodySmall
+                  ?.copyWith(color: scheme.onTertiaryContainer),
+            ),
+          ),
         ],
       ),
     );

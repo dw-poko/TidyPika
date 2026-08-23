@@ -7,10 +7,17 @@ import 'fs_walk.dart';
 import 'models.dart';
 
 const int _quickHashSize = 4096;
-const int _maxIndexedFiles = 100000;
+
+/// Where the walk gives up.
+///
+/// Only paths of files at or above the minimum size are held, so the cost is
+/// tens of megabytes at this count — enough for a user profile several times
+/// over, and short of what would put a scan of an entire drive in trouble.
+const int maxIndexedFiles = 400000;
+
 const int _progressInterval = 200;
 
-List<DuplicateGroup> findDuplicates(
+DuplicateScan findDuplicates(
   String root, {
   int minSizeBytes = 1024,
   ProgressCallback? onProgress,
@@ -38,7 +45,7 @@ List<DuplicateGroup> findDuplicates(
       sizeGroups.putIfAbsent(size, () => <String>[]).add(path);
     }
 
-    if (indexed >= _maxIndexedFiles) break;
+    if (indexed >= maxIndexedFiles) break;
   }
 
   sizeGroups.removeWhere((_, paths) => paths.length < 2);
@@ -138,7 +145,12 @@ List<DuplicateGroup> findDuplicates(
   );
 
   results.sort((a, b) => b.wastedSize.compareTo(a.wastedSize));
-  return results;
+
+  return DuplicateScan(
+    groups: results,
+    indexed: indexed,
+    limit: maxIndexedFiles,
+  );
 }
 
 /// SHA-256 of a file, or of its first [maxBytes] when given. Streamed in chunks

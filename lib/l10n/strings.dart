@@ -251,6 +251,9 @@ const Map<String, String> _en = {
   'dupes.wasted': 'Wasted',
   'dupes.copies': '{0} copies',
   'dupes.groups': '{0} groups',
+  'dupes.truncated':
+      'The scan stopped after {0} files, so anything past that was not '
+      'compared. Point it at a narrower folder to cover all of it.',
 
   'analyze.title': 'Disk Analysis',
   'analyze.subtitle': 'See which folders are taking up space',
@@ -450,6 +453,9 @@ const Map<String, String> _ko = {
   'dupes.wasted': '낭비',
   'dupes.copies': '사본 {0}개',
   'dupes.groups': '{0}개 그룹',
+  'dupes.truncated':
+      '파일 {0}개에서 검사를 멈췄습니다. 그 뒤는 비교하지 않았습니다. '
+      '더 좁은 폴더를 지정하면 전부 검사합니다.',
 
   'analyze.title': '디스크 분석',
   'analyze.subtitle': '어떤 폴더가 공간을 차지하는지 확인합니다',
@@ -649,6 +655,9 @@ const Map<String, String> _ja = {
   'dupes.wasted': '無駄',
   'dupes.copies': '{0} 個の複製',
   'dupes.groups': '{0} グループ',
+  'dupes.truncated':
+      'ファイル {0} 件で検査を打ち切りました。それ以降は比較していません。'
+      'より狭いフォルダーを指定すると全体を検査できます。',
 
   'analyze.title': 'ディスク分析',
   'analyze.subtitle': 'どのフォルダーが容量を使っているかを表示します',
@@ -838,6 +847,9 @@ const Map<String, String> _zh = {
   'dupes.wasted': '浪费',
   'dupes.copies': '{0} 个副本',
   'dupes.groups': '{0} 组',
+  'dupes.truncated':
+      '扫描在 {0} 个文件后停止，之后的文件没有比较。指定更小的文件夹'
+      '即可全部检查。',
 
   'analyze.title': '磁盘分析',
   'analyze.subtitle': '查看哪些文件夹占用了空间',
