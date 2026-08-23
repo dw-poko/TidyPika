@@ -171,7 +171,17 @@ const Map<String, String> _en = {
 
   'result.title': 'Clean complete',
   'result.body': 'Deleted {0} files and reclaimed {1}.',
-  'result.errors': '{0} items could not be removed.',
+  'result.failures': 'Could not remove {0} files:',
+  'result.moreFailures': '{0} more',
+  'result.elevate': 'Restart as administrator',
+  'result.elevateHint':
+      'Windows folders refuse a delete unless the app is elevated.',
+
+  'failure.protected': 'Protected',
+  'failure.accessDenied': 'Access denied',
+  'failure.inUse': 'In use',
+  'failure.notFound': 'Already gone',
+  'failure.refused': 'Refused',
   'result.close': 'Close',
 
   'error.title': 'Something went wrong',
@@ -253,7 +263,16 @@ const Map<String, String> _ko = {
 
   'result.title': '정리 완료',
   'result.body': '파일 {0}개를 삭제하고 {1}를 확보했습니다.',
-  'result.errors': '{0}개 항목은 삭제하지 못했습니다.',
+  'result.failures': '{0}개는 삭제하지 못했습니다:',
+  'result.moreFailures': '외 {0}개 더',
+  'result.elevate': '관리자 권한으로 다시 실행',
+  'result.elevateHint': 'Windows 폴더는 관리자 권한 없이는 삭제할 수 없습니다.',
+
+  'failure.protected': '보호됨',
+  'failure.accessDenied': '권한 없음',
+  'failure.inUse': '사용 중',
+  'failure.notFound': '이미 없음',
+  'failure.refused': '거부됨',
   'result.close': '닫기',
 
   'error.title': '문제가 발생했습니다',

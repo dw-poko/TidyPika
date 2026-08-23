@@ -73,12 +73,41 @@ class DuplicateGroup {
   int get wastedSize => size * (files.length - 1);
 }
 
+/// Why a file is still there after a clean.
+///
+/// The reason has to travel back from the scanning isolate, so it is carried
+/// as data and turned into words by the UI — the isolate has its own copy of
+/// the language setting and would always answer in English.
+enum CleanFailure { protected, accessDenied, inUse, notFound, refused }
+
+class CleanError {
+  const CleanError(this.path, this.reason);
+
+  final String path;
+  final CleanFailure reason;
+}
+
 class CleanResult {
   CleanResult();
 
   int deleted = 0;
   int freedBytes = 0;
-  final List<String> errors = [];
+  final List<CleanError> errors = [];
+
+  /// How many files failed for each reason, most common first.
+  Map<CleanFailure, int> get failureCounts {
+    final counts = <CleanFailure, int>{};
+    for (final error in errors) {
+      counts[error.reason] = (counts[error.reason] ?? 0) + 1;
+    }
+
+    return Map.fromEntries(
+      counts.entries.toList()..sort((a, b) => b.value.compareTo(a.value)),
+    );
+  }
+
+  bool get needsElevation =>
+      errors.any((error) => error.reason == CleanFailure.accessDenied);
 }
 
 class DiskInfo {

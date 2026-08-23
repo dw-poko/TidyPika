@@ -55,6 +55,13 @@ Windows and user temp directories, Prefetch, thumbnail cache, Windows Update
 downloads, system and application logs, crash dumps, Chrome and Edge caches,
 and the pip and npm package caches.
 
+The targets under `C:\Windows` — Windows Update downloads above all — belong to
+SYSTEM and Administrators, and an account in the Administrators group still
+runs with the filtered token until it is elevated. Files there are reported as
+`Access denied`, and the result dialog offers to restart the app elevated. A
+file another program is holding open, such as the thumbnail cache Explorer
+never lets go of, is reported as `In use` and needs that program closed first.
+
 ### Install
 
 Grab the latest [release](../../releases):
@@ -191,6 +198,13 @@ TidyPika는 디스크를 잡아먹는 것들 — 임시 파일, 브라우저 캐
 
 Windows·사용자 임시 폴더, Prefetch, 썸네일 캐시, Windows Update 다운로드,
 시스템·응용 프로그램 로그, 크래시 덤프, Chrome·Edge 캐시, pip·npm 패키지 캐시.
+
+`C:\Windows` 아래 대상은 — 특히 Windows Update 다운로드는 — SYSTEM과
+Administrators의 소유이고, 관리자 그룹 계정이라도 권한을 올리기 전까지는 제한된
+토큰으로 실행됩니다. 이런 파일은 `권한 없음`으로 표시되고, 결과 창에서 관리자
+권한으로 다시 실행할 수 있습니다. 다른 프로그램이 열어 둔 파일은 — 탐색기가 놓지
+않는 썸네일 캐시가 대표적입니다 — `사용 중`으로 표시되며, 그 프로그램을 먼저
+닫아야 합니다.
 
 ### 설치
 

@@ -1,14 +1,16 @@
 import 'dart:ffi';
+import 'dart:io';
 
 import 'package:ffi/ffi.dart';
 
-/// Minimal hand-rolled bindings for the three Win32 areas this app needs:
-/// drive capacity, Recycle Bin deletion, and the UI language. Declaring them
-/// here rather than depending on a bindings package keeps the surface small
-/// and the struct layout under our own control.
+/// Minimal hand-rolled bindings for the Win32 areas this app needs: drive
+/// capacity, Recycle Bin deletion, the UI language, and whether the process is
+/// elevated. Declaring them here rather than depending on a bindings package
+/// keeps the surface small and the struct layout under our own control.
 
 final DynamicLibrary _kernel32 = DynamicLibrary.open('kernel32.dll');
 final DynamicLibrary _shell32 = DynamicLibrary.open('shell32.dll');
+final DynamicLibrary _advapi32 = DynamicLibrary.open('advapi32.dll');
 
 /// Bitmask of drive letters currently present, A: as bit 0.
 final int Function() getLogicalDrives = _kernel32
@@ -88,3 +90,106 @@ Pointer<Utf16> toPathList(List<String> paths, Allocator allocator) {
 int primaryUiLanguage() => getUserDefaultUILanguage() & 0x3FF;
 
 const int langKorean = 0x12;
+
+final int Function() getCurrentProcess = _kernel32
+    .lookupFunction<IntPtr Function(), int Function()>('GetCurrentProcess');
+
+final int Function(int) closeHandle = _kernel32
+    .lookupFunction<Int32 Function(IntPtr), int Function(int)>('CloseHandle');
+
+final int Function(int, int, Pointer<IntPtr>) openProcessToken =
+    _advapi32.lookupFunction<Int32 Function(IntPtr, Uint32, Pointer<IntPtr>),
+        int Function(int, int, Pointer<IntPtr>)>('OpenProcessToken');
+
+final int Function(int, int, Pointer<Void>, int, Pointer<Uint32>)
+    getTokenInformation = _advapi32.lookupFunction<
+        Int32 Function(IntPtr, Int32, Pointer<Void>, Uint32, Pointer<Uint32>),
+        int Function(int, int, Pointer<Void>, int, Pointer<Uint32>)>(
+  'GetTokenInformation',
+);
+
+final int Function(
+  Pointer<Void>,
+  Pointer<Utf16>,
+  Pointer<Utf16>,
+  Pointer<Utf16>,
+  Pointer<Utf16>,
+  int,
+) shellExecute = _shell32.lookupFunction<
+    IntPtr Function(
+      Pointer<Void>,
+      Pointer<Utf16>,
+      Pointer<Utf16>,
+      Pointer<Utf16>,
+      Pointer<Utf16>,
+      Int32,
+    ),
+    int Function(
+      Pointer<Void>,
+      Pointer<Utf16>,
+      Pointer<Utf16>,
+      Pointer<Utf16>,
+      Pointer<Utf16>,
+      int,
+    )>('ShellExecuteW');
+
+const int _tokenQuery = 0x0008;
+const int _tokenElevation = 20;
+const int _swShowNormal = 1;
+
+/// Whether this process holds an elevated token.
+///
+/// Being in the Administrators group is not the same thing: under UAC the
+/// process starts with the filtered token, which is why the Windows folders
+/// refuse a delete even for an administrator.
+bool isElevated() {
+  final token = calloc<IntPtr>();
+  final elevated = calloc<Uint32>();
+  final returned = calloc<Uint32>();
+
+  try {
+    if (openProcessToken(getCurrentProcess(), _tokenQuery, token) == 0) {
+      return false;
+    }
+
+    try {
+      final ok = getTokenInformation(
+        token.value,
+        _tokenElevation,
+        elevated.cast<Void>(),
+        sizeOf<Uint32>(),
+        returned,
+      );
+
+      return ok != 0 && elevated.value != 0;
+    } finally {
+      closeHandle(token.value);
+    }
+  } catch (_) {
+    return false;
+  } finally {
+    calloc
+      ..free(token)
+      ..free(elevated)
+      ..free(returned);
+  }
+}
+
+/// Starts this executable again through the `runas` verb, which is what puts
+/// the UAC prompt on screen. False means the prompt was dismissed, so the
+/// caller should stay where it is.
+bool relaunchElevated() {
+  final verb = 'runas'.toNativeUtf16(allocator: calloc);
+  final file = Platform.resolvedExecutable.toNativeUtf16(allocator: calloc);
+
+  try {
+    return shellExecute(nullptr, verb, file, nullptr, nullptr, _swShowNormal) >
+        32;
+  } catch (_) {
+    return false;
+  } finally {
+    calloc
+      ..free(verb)
+      ..free(file);
+  }
+}

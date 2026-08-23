@@ -1,8 +1,12 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:path/path.dart' as p;
 
 import '../core/disk_scanner.dart';
 import '../core/models.dart';
 import '../core/size_formatter.dart';
+import '../core/win32.dart';
 import '../l10n/strings.dart';
 
 class PageScaffold extends StatelessWidget {
@@ -250,28 +254,232 @@ Future<bool> confirmDelete(
 }
 
 Future<void> showCleanResult(BuildContext context, CleanResult result) {
-  var text = tf(
-    'result.body',
-    [formatCount(result.deleted), formatSize(result.freedBytes)],
-  );
-  if (result.errors.isNotEmpty) {
-    text = '$text\n${tf('result.errors', [formatCount(result.errors.length)])}';
-  }
-
   return showDialog<void>(
     context: context,
-    builder: (context) => AlertDialog(
+    builder: (context) => _CleanResultDialog(result: result),
+  );
+}
+
+/// What happened, including what did not happen and why.
+///
+/// A count of failures on its own leaves nothing to act on: a file held open
+/// by Explorer, one the Windows folders will not surrender without elevation,
+/// and one this app refused to touch all look the same. Each is named here,
+/// and the one case with a remedy — access denied while running unelevated —
+/// offers it.
+class _CleanResultDialog extends StatelessWidget {
+  const _CleanResultDialog({required this.result});
+
+  final CleanResult result;
+
+  static const int _limit = 200;
+
+  @override
+  Widget build(BuildContext context) {
+    LanguageScope.watch(context);
+
+    final theme = Theme.of(context);
+    final errors = result.errors;
+    final shown = errors.length > _limit ? errors.sublist(0, _limit) : errors;
+    final hidden = errors.length - shown.length;
+
+    // isElevated() is a cheap token query, and a dialog is built rarely.
+    final offerElevation = result.needsElevation && !isElevated();
+
+    return AlertDialog(
       icon: const Icon(Icons.check_circle_outline),
       title: Text(t('result.title')),
-      content: Text(text),
+      content: SizedBox(
+        width: 500,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              tf('result.body',
+                  [formatCount(result.deleted), formatSize(result.freedBytes)]),
+            ),
+            if (errors.isNotEmpty) ...[
+              const SizedBox(height: 18),
+              Text(
+                tf('result.failures', [formatCount(errors.length)]),
+                style: theme.textTheme.titleSmall,
+              ),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children: [
+                  for (final entry in result.failureCounts.entries)
+                    _ReasonChip(reason: entry.key, count: entry.value),
+                ],
+              ),
+              const SizedBox(height: 12),
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxHeight: 190),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.surfaceContainerHighest
+                        .withValues(alpha: 0.5),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 12, vertical: 10),
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: shown.length + (hidden > 0 ? 1 : 0),
+                    itemBuilder: (context, index) {
+                      if (index == shown.length) {
+                        return Padding(
+                          padding: const EdgeInsets.only(top: 8),
+                          child: Text(
+                            tf('result.moreFailures', [formatCount(hidden)]),
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        );
+                      }
+
+                      return _FailedFile(error: shown[index]);
+                    },
+                  ),
+                ),
+              ),
+              if (offerElevation) ...[
+                const SizedBox(height: 14),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(
+                      Icons.shield_outlined,
+                      size: 16,
+                      color: theme.colorScheme.primary,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        t('result.elevateHint'),
+                        style: theme.textTheme.bodySmall,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ],
+          ],
+        ),
+      ),
       actions: [
+        if (offerElevation)
+          TextButton.icon(
+            // The elevated copy takes over from here; two windows on the same
+            // build would only fight over the same directories.
+            onPressed: () {
+              if (relaunchElevated()) exit(0);
+            },
+            icon: const Icon(Icons.shield_outlined, size: 18),
+            label: Text(t('result.elevate')),
+          ),
         FilledButton(
           onPressed: () => Navigator.of(context).pop(),
           child: Text(t('result.close')),
         ),
       ],
-    ),
-  );
+    );
+  }
+}
+
+class _ReasonChip extends StatelessWidget {
+  const _ReasonChip({required this.reason, required this.count});
+
+  final CleanFailure reason;
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    LanguageScope.watch(context);
+
+    final scheme = Theme.of(context).colorScheme;
+    final (Color background, Color foreground) = switch (reason) {
+      CleanFailure.accessDenied => (
+          scheme.errorContainer,
+          scheme.onErrorContainer,
+        ),
+      CleanFailure.inUse => (
+          scheme.tertiaryContainer,
+          scheme.onTertiaryContainer,
+        ),
+      _ => (scheme.secondaryContainer, scheme.onSecondaryContainer),
+    };
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+      decoration: BoxDecoration(
+        color: background,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Text(
+        '${t('failure.${reason.name}')}  ${formatCount(count)}',
+        style: Theme.of(context)
+            .textTheme
+            .labelSmall
+            ?.copyWith(color: foreground),
+      ),
+    );
+  }
+}
+
+class _FailedFile extends StatelessWidget {
+  const _FailedFile({required this.error});
+
+  final CleanError error;
+
+  @override
+  Widget build(BuildContext context) {
+    LanguageScope.watch(context);
+
+    final theme = Theme.of(context);
+
+    return Tooltip(
+      message: error.path,
+      waitDuration: const Duration(milliseconds: 500),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 3),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    p.basename(error.path),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodySmall,
+                  ),
+                  Text(
+                    p.dirname(error.path),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodySmall
+                        ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 12),
+            Text(
+              t('failure.${error.reason.name}'),
+              style: theme.textTheme.bodySmall
+                  ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 Future<void> showErrorDialog(BuildContext context, String message) {

@@ -23,6 +23,23 @@ const List<String> _protectedDirectories = [
   r'c:\program files (x86)',
 ];
 
+/// Places under a protected root that exist to be emptied.
+///
+/// Update payloads and installer leftovers are expanded packages, so they are
+/// full of the same extensions as the system binaries the guard is there for:
+/// SoftwareDistribution\Download alone is mostly .dll, .cat, .mui and .inf.
+/// Without these exceptions the guard refuses most of what Quick Clean is
+/// pointed at, and refuses it silently.
+const List<String> _disposableDirectories = [
+  r'\softwaredistribution\',
+  r'\windows\temp\',
+  r'\windows\systemtemp\',
+  r'\windows\logs\',
+  r'\windows\prefetch\',
+  r'\windows\minidump\',
+  r'\logfiles\',
+];
+
 /// Guards against removing a system binary that happens to sit inside a
 /// scanned directory.
 bool isProtected(String path) {
@@ -31,6 +48,8 @@ bool isProtected(String path) {
   }
 
   final lower = path.toLowerCase();
+  if (_disposableDirectories.any(lower.contains)) return false;
+
   return _protectedDirectories.any(lower.startsWith);
 }
 
@@ -44,7 +63,7 @@ CleanResult deleteFiles(
 
   for (final path in files) {
     if (isProtected(path)) {
-      result.errors.add('Protected: $path');
+      result.errors.add(CleanError(path, CleanFailure.protected));
     } else {
       candidates.add(path);
     }
@@ -73,8 +92,10 @@ void _deletePermanently(
       File(path).deleteSync();
       result.deleted++;
       result.freedBytes += size;
-    } catch (e) {
-      result.errors.add('$path: $e');
+    } on FileSystemException catch (e) {
+      result.errors.add(CleanError(path, _reasonFor(e)));
+    } catch (_) {
+      result.errors.add(CleanError(path, CleanFailure.refused));
     }
 
     done++;
@@ -130,11 +151,7 @@ void _recycle(
 
       for (var i = 0; i < batch.length; i++) {
         if (File(batch[i]).existsSync()) {
-          result.errors.add(
-            code == 0
-                ? '${batch[i]}: not removed'
-                : '${batch[i]}: shell error 0x${code.toRadixString(16)}',
-          );
+          result.errors.add(CleanError(batch[i], _whySurvived(batch[i], code)));
         } else {
           result.deleted++;
           result.freedBytes += sizes[i];
@@ -171,6 +188,61 @@ void _recycle(
   }
 
   flush();
+}
+
+/// Works out why a file is still on disk after the shell was asked to remove
+/// it.
+///
+/// `SHFileOperation` reports one code for the whole batch and says nothing
+/// about which file objected, so each survivor is opened for reading first —
+/// a lock or a denied ACL shows up there, and read-only open cannot create or
+/// alter anything. A file that opens cleanly is one we may read but not
+/// delete, and then the batch code is the only evidence left.
+CleanFailure _whySurvived(String path, int shellCode) {
+  RandomAccessFile? handle;
+
+  try {
+    handle = File(path).openSync();
+    return _fromShellCode(shellCode);
+  } on FileSystemException catch (e) {
+    final reason = _reasonFor(e);
+    return reason == CleanFailure.refused ? _fromShellCode(shellCode) : reason;
+  } catch (_) {
+    return _fromShellCode(shellCode);
+  } finally {
+    try {
+      handle?.closeSync();
+    } catch (_) {
+      // The handle goes away with the isolate either way.
+    }
+  }
+}
+
+CleanFailure _fromShellCode(int code) {
+  switch (code) {
+    case 0x78: // DE_ACCESSDENIEDSRC
+    case 5: // ERROR_ACCESS_DENIED
+      return CleanFailure.accessDenied;
+    case 0x20: // ERROR_SHARING_VIOLATION
+      return CleanFailure.inUse;
+    default:
+      return CleanFailure.refused;
+  }
+}
+
+CleanFailure _reasonFor(FileSystemException error) {
+  switch (error.osError?.errorCode) {
+    case 5: // ERROR_ACCESS_DENIED
+      return CleanFailure.accessDenied;
+    case 32: // ERROR_SHARING_VIOLATION
+    case 33: // ERROR_LOCK_VIOLATION
+      return CleanFailure.inUse;
+    case 2: // ERROR_FILE_NOT_FOUND
+    case 3: // ERROR_PATH_NOT_FOUND
+      return CleanFailure.notFound;
+    default:
+      return CleanFailure.refused;
+  }
 }
 
 int _sizeOrZero(String path) {
