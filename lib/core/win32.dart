@@ -93,9 +93,9 @@ const int langKorean = 0x12;
 const int langJapanese = 0x11;
 const int langChinese = 0x04;
 
-/// Layout of `WIN32_FILE_ATTRIBUTE_DATA`: nine DWORDs with no padding, the
-/// three FILETIME pairs written out as the halves they are.
-final class Win32FileAttributeData extends Struct {
+/// Layout of `WIN32_FIND_DATAW`: eleven DWORDs, then the two name buffers,
+/// which nothing here reads — 260 and 14 WCHARs, taken together as one block.
+final class Win32FindData extends Struct {
   @Uint32()
   external int dwFileAttributes;
 
@@ -118,41 +118,119 @@ final class Win32FileAttributeData extends Struct {
   external int nFileSizeHigh;
   @Uint32()
   external int nFileSizeLow;
+
+  @Uint32()
+  external int dwReserved0;
+  @Uint32()
+  external int dwReserved1;
+
+  @Array(274)
+  external Array<Uint16> names;
 }
 
-final int Function(Pointer<Utf16>, int, Pointer<Void>) getFileAttributesEx =
-    _kernel32.lookupFunction<
-        Int32 Function(Pointer<Utf16>, Int32, Pointer<Void>),
-        int Function(Pointer<Utf16>, int, Pointer<Void>)>(
-  'GetFileAttributesExW',
-);
+final int Function(Pointer<Utf16>, Pointer<Void>) findFirstFile =
+    _kernel32.lookupFunction<IntPtr Function(Pointer<Utf16>, Pointer<Void>),
+        int Function(Pointer<Utf16>, Pointer<Void>)>('FindFirstFileW');
 
-const int _getFileExInfoStandard = 0;
+final int Function(int) findClose = _kernel32
+    .lookupFunction<Int32 Function(IntPtr), int Function(int)>('FindClose');
 
-/// Size of a file read from its directory entry, without opening it.
+const int _invalidHandle = -1;
+
+/// Size of a file, read out of its parent directory's entry for it.
 ///
-/// hiberfil.sys is held open by the system for the life of the session, so
-/// anything that wants a handle fails on it. Asking for the attributes does
-/// not open anything and answers whether or not the file is in use.
-int? fileSizeWithoutOpening(String path) {
+/// This is what `dir` does, and it is the only thing that works on
+/// hiberfil.sys: the file's own ACL grants nothing to anyone but SYSTEM, so
+/// asking the file about itself — `GetFileAttributesEx` included — comes back
+/// access denied. Searching the directory needs only the permission to list
+/// it, which everyone has on the root of the system drive.
+///
+/// Null means the search found nothing, which for a literal path means the
+/// file is not there.
+int? fileSizeFromDirectory(String path) {
   final name = path.toNativeUtf16(allocator: calloc);
-  final data = calloc<Win32FileAttributeData>();
+  final data = calloc<Win32FindData>();
 
   try {
-    final ok = getFileAttributesEx(
-      name,
-      _getFileExInfoStandard,
-      data.cast<Void>(),
-    );
-    if (ok == 0) return null;
+    final handle = findFirstFile(name, data.cast<Void>());
+    if (handle == _invalidHandle) return null;
 
-    return (data.ref.nFileSizeHigh << 32) | data.ref.nFileSizeLow;
+    try {
+      return (data.ref.nFileSizeHigh << 32) | data.ref.nFileSizeLow;
+    } finally {
+      findClose(handle);
+    }
   } catch (_) {
     return null;
   } finally {
     calloc
       ..free(name)
       ..free(data);
+  }
+}
+
+/// `HKEY_LOCAL_MACHINE`. The predefined keys are negative 32-bit constants
+/// widened to pointer size, so the sign extension matters on x64.
+const int hkeyLocalMachine = -2147483646;
+
+const int _rrfRtRegDword = 0x00000010;
+
+final int Function(
+  int,
+  Pointer<Utf16>,
+  Pointer<Utf16>,
+  int,
+  Pointer<Uint32>,
+  Pointer<Void>,
+  Pointer<Uint32>,
+) regGetValue = _advapi32.lookupFunction<
+    Int32 Function(
+      IntPtr,
+      Pointer<Utf16>,
+      Pointer<Utf16>,
+      Uint32,
+      Pointer<Uint32>,
+      Pointer<Void>,
+      Pointer<Uint32>,
+    ),
+    int Function(
+      int,
+      Pointer<Utf16>,
+      Pointer<Utf16>,
+      int,
+      Pointer<Uint32>,
+      Pointer<Void>,
+      Pointer<Uint32>,
+    )>('RegGetValueW');
+
+/// Reads one REG_DWORD, or null if it is not there or cannot be read.
+int? registryDword(int root, String subKey, String valueName) {
+  final key = subKey.toNativeUtf16(allocator: calloc);
+  final name = valueName.toNativeUtf16(allocator: calloc);
+  final data = calloc<Uint32>();
+  final size = calloc<Uint32>();
+  size.value = sizeOf<Uint32>();
+
+  try {
+    final status = regGetValue(
+      root,
+      key,
+      name,
+      _rrfRtRegDword,
+      nullptr,
+      data.cast<Void>(),
+      size,
+    );
+
+    return status == 0 ? data.value : null;
+  } catch (_) {
+    return null;
+  } finally {
+    calloc
+      ..free(key)
+      ..free(name)
+      ..free(data)
+      ..free(size);
   }
 }
 

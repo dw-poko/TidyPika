@@ -170,6 +170,9 @@ const Map<String, String> _en = {
   'hiber.bodyOff':
       '{0} is deleted and {1} goes back to the drive. Fast Startup '
       'uses the same file and turns off with it.',
+  'hiber.bodyOffUnknown':
+      'The hibernation file at {0} is deleted and its space goes back to '
+      'the drive. Fast Startup uses the same file and turns off with it.',
   'hiber.enable': 'Turn on',
   'hiber.disable': 'Turn off',
   'hiber.needsAdmin':
@@ -311,6 +314,9 @@ const Map<String, String> _ko = {
       '메모리에 따라 정해지며 보통 수 GB입니다.',
   'hiber.bodyOff':
       '{0}을(를) 삭제하고 {1}을(를) 드라이브에 돌려줍니다. 같은 '
+      '파일을 쓰는 빠른 시작도 함께 꺼집니다.',
+  'hiber.bodyOffUnknown':
+      '{0}을(를) 삭제하고 그만큼의 공간을 드라이브에 돌려줍니다. 같은 '
       '파일을 쓰는 빠른 시작도 함께 꺼집니다.',
   'hiber.enable': '켜기',
   'hiber.disable': '끄기',
@@ -454,6 +460,9 @@ const Map<String, String> _ja = {
   'hiber.bodyOff':
       '{0} を削除し、{1} をドライブに戻します。同じファイルを使う'
       '高速スタートアップも一緒に無効になります。',
+  'hiber.bodyOffUnknown':
+      '{0} を削除し、その分の容量をドライブに戻します。同じファイルを'
+      '使う高速スタートアップも一緒に無効になります。',
   'hiber.enable': '有効にする',
   'hiber.disable': '無効にする',
   'hiber.needsAdmin':
@@ -594,6 +603,9 @@ const Map<String, String> _zh = {
       '通常为数 GB。',
   'hiber.bodyOff':
       '将删除 {0}，并把 {1} 归还给驱动器。使用同一文件的快速启动'
+      '也会一并关闭。',
+  'hiber.bodyOffUnknown':
+      '将删除 {0}，并把相应空间归还给驱动器。使用同一文件的快速启动'
       '也会一并关闭。',
   'hiber.enable': '开启',
   'hiber.disable': '关闭',

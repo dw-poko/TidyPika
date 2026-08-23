@@ -268,7 +268,10 @@ class _HibernationCard extends StatelessWidget {
                 ],
               ),
             ),
-            if (info.enabled) ...[
+            // Size and state are read separately, so an enabled feature whose
+            // file could not be measured shows as on with no figure rather
+            // than as off.
+            if (info.size != null) ...[
               const SizedBox(width: 12),
               Text(
                 formatSize(info.size!),
@@ -298,6 +301,15 @@ class _HibernationConfirm extends StatelessWidget {
   final HibernationInfo info;
   final bool enabling;
 
+  String _body() {
+    if (enabling) return t('hiber.bodyOn');
+
+    final size = info.size;
+    return size == null
+        ? tf('hiber.bodyOffUnknown', [info.path])
+        : tf('hiber.bodyOff', [info.path, formatSize(size)]);
+  }
+
   @override
   Widget build(BuildContext context) {
     LanguageScope.watch(context);
@@ -307,11 +319,7 @@ class _HibernationConfirm extends StatelessWidget {
       title: Text(t(enabling ? 'hiber.confirmOn' : 'hiber.confirmOff')),
       content: SizedBox(
         width: 440,
-        child: Text(
-          enabling
-              ? t('hiber.bodyOn')
-              : tf('hiber.bodyOff', [info.path, formatSize(info.size ?? 0)]),
-        ),
+        child: Text(_body()),
       ),
       actions: [
         TextButton(

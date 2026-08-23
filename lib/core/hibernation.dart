@@ -10,15 +10,19 @@ import 'win32.dart';
 /// there whether or not the machine ever hibernates — on a 32 GB PC that is
 /// commonly several gigabytes of the system drive doing nothing.
 class HibernationInfo {
-  const HibernationInfo({required this.path, required this.size});
+  const HibernationInfo({
+    required this.path,
+    required this.enabled,
+    required this.size,
+  });
 
   final String path;
 
-  /// Null when the file is not there, which is what the feature being off
-  /// looks like on disk.
-  final int? size;
+  final bool enabled;
 
-  bool get enabled => size != null;
+  /// Null when the size could not be read, which is not the same as the
+  /// feature being off — hence [enabled] being asked separately.
+  final int? size;
 }
 
 String hibernationFile() {
@@ -32,9 +36,33 @@ String hibernationFile() {
   return '$drive\\hiberfil.sys';
 }
 
+/// Whether Windows has the feature switched on, straight from the setting
+/// rather than inferred.
+///
+/// The file on disk is the obvious signal and a poor one: it is readable only
+/// in ways that can fail for reasons unrelated to the setting. This value is
+/// under HKLM\SYSTEM, which every account may read.
+bool? _hibernateEnabled() {
+  final value = registryDword(
+    hkeyLocalMachine,
+    r'SYSTEM\CurrentControlSet\Control\Power',
+    'HibernateEnabled',
+  );
+
+  return value == null ? null : value != 0;
+}
+
 HibernationInfo readHibernation() {
   final path = hibernationFile();
-  return HibernationInfo(path: path, size: fileSizeWithoutOpening(path));
+  final size = fileSizeFromDirectory(path);
+
+  return HibernationInfo(
+    path: path,
+    // The registry is the answer; the file is the fallback for the case where
+    // even that cannot be read.
+    enabled: _hibernateEnabled() ?? (size != null),
+    size: size,
+  );
 }
 
 /// Turns the feature on or off through `powercfg`, which is the only supported
