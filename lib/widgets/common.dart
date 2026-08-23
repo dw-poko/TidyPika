@@ -140,6 +140,13 @@ class PathField extends StatelessWidget {
   final TextEditingController controller;
   final bool enabled;
 
+  /// A millimetre, in the units Flutter lays out with.
+  ///
+  /// A logical pixel is defined as a 96th of an inch, so a millimetre is
+  /// 96/25.4 of one. That holds on a display whose real dot pitch matches the
+  /// scaling Windows reports for it, which is usually close and rarely exact.
+  static const double _millimetre = 96 / 25.4;
+
   @override
   Widget build(BuildContext context) {
     LanguageScope.watch(context);
@@ -149,28 +156,32 @@ class PathField extends StatelessWidget {
       enabled: enabled,
       decoration: InputDecoration(
         labelText: t('common.folder'),
-        suffixIcon: PopupMenuButton<String>(
-          enabled: enabled,
-          icon: const Icon(Icons.storage_outlined),
-          tooltip: t('common.browse'),
-          onSelected: (value) => controller.text = value,
-          itemBuilder: (context) {
-            List<DiskInfo> disks;
-            try {
-              disks = getDisks();
-            } catch (_) {
-              disks = const [];
-            }
+        // Padding on the right of a right-aligned suffix moves it inward.
+        suffixIcon: Padding(
+          padding: const EdgeInsets.only(right: _millimetre),
+          child: PopupMenuButton<String>(
+            enabled: enabled,
+            icon: const Icon(Icons.storage_outlined),
+            tooltip: t('common.browse'),
+            onSelected: (value) => controller.text = value,
+            itemBuilder: (context) {
+              List<DiskInfo> disks;
+              try {
+                disks = getDisks();
+              } catch (_) {
+                disks = const [];
+              }
 
-            return [
-              for (final disk in disks)
-                PopupMenuItem<String>(
-                  value: disk.root,
-                  child: Text('${disk.root}  ·  ${formatSize(disk.free)} '
-                      '${t('home.free')}'),
-                ),
-            ];
-          },
+              return [
+                for (final disk in disks)
+                  PopupMenuItem<String>(
+                    value: disk.root,
+                    child: Text('${disk.root}  ·  ${formatSize(disk.free)} '
+                        '${t('home.free')}'),
+                  ),
+              ];
+            },
+          ),
         ),
       ),
     );
