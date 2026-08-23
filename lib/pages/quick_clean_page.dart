@@ -275,7 +275,7 @@ class _QuickCleanPageState extends State<QuickCleanPage> {
               const SizedBox(width: 8),
               Tooltip(
                 message:
-                    expanded ? t('quick.hideFiles') : t('quick.showFiles'),
+                    expanded ? t('common.hideFiles') : t('common.showFiles'),
                 child: AnimatedRotation(
                   turns: expanded ? 0.5 : 0,
                   duration: const Duration(milliseconds: 150),
@@ -327,7 +327,7 @@ class _FileList extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.only(top: 8),
               child: Text(
-                tf('quick.more', [formatCount(hidden)]),
+                tf('common.more', [formatCount(hidden)]),
                 style: theme.textTheme.bodySmall
                     ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
               ),

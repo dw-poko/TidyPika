@@ -354,7 +354,11 @@ List<FileEntry> scanLargeFiles(
   return results;
 }
 
-List<DirectoryEntry> analyzeDirectory(
+/// Loose files sent back with the report. The list is for reading, not for
+/// arithmetic — the entry's count and size cover every file, listed or not.
+const int maxLooseFilesListed = 200;
+
+DirectoryReport analyzeDirectory(
   String root, {
   ProgressCallback? onProgress,
 }) {
@@ -367,26 +371,33 @@ List<DirectoryEntry> analyzeDirectory(
   // The files directly inside, before the sub-folders: they belong to this
   // folder as much as any sub-folder does, and leaving them out makes the
   // total smaller than the folder.
+  final loose = <FileEntry>[];
   var looseSize = 0;
-  var looseCount = 0;
+
   for (final path in listFilesShallow(root)) {
     final size = fileSize(path);
     if (size == null) continue;
 
+    loose.add(FileEntry(path, size));
     looseSize += size;
-    looseCount++;
   }
 
-  if (looseCount > 0) {
+  loose.sort((a, b) => b.size.compareTo(a.size));
+
+  if (loose.isNotEmpty) {
     entries.add(
       DirectoryEntry(
         path: root,
         name: root,
         size: looseSize,
-        fileCount: looseCount,
+        fileCount: loose.length,
         isLooseFiles: true,
       ),
     );
+  }
+
+  if (loose.length > maxLooseFilesListed) {
+    loose.length = maxLooseFilesListed;
   }
 
   for (var i = 0; i < children.length; i++) {
@@ -445,5 +456,6 @@ List<DirectoryEntry> analyzeDirectory(
   );
 
   entries.sort((a, b) => b.size.compareTo(a.size));
-  return entries;
+
+  return DirectoryReport(entries: entries, files: loose);
 }

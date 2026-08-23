@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import 'package:path/path.dart' as p;
+
 import '../core/models.dart';
 import '../core/paths.dart';
 import '../core/size_formatter.dart';
@@ -22,6 +24,14 @@ class _AnalyzePageState extends State<AnalyzePage> {
   final TextEditingController _path = TextEditingController(text: r'C:\');
 
   List<DirectoryEntry> _entries = const [];
+
+  /// The files lying directly in the folder, behind the row that stands for
+  /// them.
+  List<FileEntry> _looseFiles = const [];
+
+  /// Whether that row is open. Folders are opened by going into them; the
+  /// loose files have nowhere to go, so they unfold in place.
+  bool _looseOpen = false;
 
   /// The folder the results belong to. The path field is where a scan is
   /// started from; this is where it actually got to, and the crumbs are read
@@ -58,6 +68,8 @@ class _AnalyzePageState extends State<AnalyzePage> {
     setState(() {
       _busy = true;
       _entries = const [];
+      _looseFiles = const [];
+      _looseOpen = false;
       _current = root;
     });
 
@@ -67,11 +79,12 @@ class _AnalyzePageState extends State<AnalyzePage> {
           _monitor.report(event.progress);
 
         case TaskDone():
-          final entries = (event.value! as List).cast<DirectoryEntry>();
+          final report = event.value! as DirectoryReport;
           _monitor.finish();
           if (!mounted) return;
           setState(() {
-            _entries = entries;
+            _entries = report.entries;
+            _looseFiles = report.files;
             _busy = false;
           });
 
@@ -145,14 +158,36 @@ class _AnalyzePageState extends State<AnalyzePage> {
                       itemBuilder: (context, index) {
                         final entry = _entries[index];
 
-                        return _DirectoryRow(
-                          entry: entry,
-                          total: total,
-                          // Only a folder can be gone into; the loose files
-                          // are already as far in as they go.
-                          onOpen: _busy || entry.isLooseFiles
-                              ? null
-                              : () => _analyzePath(entry.path),
+                        if (!entry.isLooseFiles) {
+                          return _DirectoryRow(
+                            entry: entry,
+                            total: total,
+                            onOpen:
+                                _busy ? null : () => _analyzePath(entry.path),
+                          );
+                        }
+
+                        // The loose files have nowhere to descend to, so the
+                        // row unfolds where it stands.
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            _DirectoryRow(
+                              entry: entry,
+                              total: total,
+                              expanded: _looseOpen,
+                              onOpen: _busy
+                                  ? null
+                                  : () => setState(
+                                        () => _looseOpen = !_looseOpen,
+                                      ),
+                            ),
+                            if (_looseOpen)
+                              _LooseFileList(
+                                files: _looseFiles,
+                                total: entry.fileCount,
+                              ),
+                          ],
                         );
                       },
                     ),
@@ -222,11 +257,15 @@ class _DirectoryRow extends StatelessWidget {
     required this.entry,
     required this.total,
     required this.onOpen,
+    this.expanded,
   });
 
   final DirectoryEntry entry;
   final int total;
   final VoidCallback? onOpen;
+
+  /// Null for a folder, which is entered rather than unfolded.
+  final bool? expanded;
 
   @override
   Widget build(BuildContext context) {
@@ -243,9 +282,11 @@ class _DirectoryRow extends StatelessWidget {
         child: Row(
           children: [
             Icon(
-              entry.isLooseFiles
-                  ? Icons.description_outlined
-                  : Icons.folder_outlined,
+              switch (expanded) {
+                null => Icons.folder_outlined,
+                true => Icons.expand_less,
+                false => Icons.expand_more,
+              },
               size: 18,
               color: scheme.onSurfaceVariant,
             ),
@@ -308,6 +349,74 @@ class _DirectoryRow extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// The files lying directly in the folder, largest first.
+///
+/// Only the first pageful travels back from the scan, so anything past it is
+/// reported as a count rather than left unmentioned.
+class _LooseFileList extends StatelessWidget {
+  const _LooseFileList({required this.files, required this.total});
+
+  final List<FileEntry> files;
+
+  /// Every loose file, listed or not.
+  final int total;
+
+  @override
+  Widget build(BuildContext context) {
+    LanguageScope.watch(context);
+
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final hidden = total - files.length;
+
+    return Container(
+      width: double.infinity,
+      color: scheme.surfaceContainerHighest.withValues(alpha: 0.5),
+      padding: const EdgeInsets.fromLTRB(46, 10, 16, 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (final file in files)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 3),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Tooltip(
+                      message: file.path,
+                      waitDuration: const Duration(milliseconds: 500),
+                      child: Text(
+                        p.basename(file.path),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.bodySmall,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    formatSize(file.size),
+                    style: theme.textTheme.bodySmall
+                        ?.copyWith(color: scheme.onSurfaceVariant),
+                  ),
+                ],
+              ),
+            ),
+          if (hidden > 0)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Text(
+                tf('common.more', [formatCount(hidden)]),
+                style: theme.textTheme.bodySmall
+                    ?.copyWith(color: scheme.onSurfaceVariant),
+              ),
+            ),
+        ],
       ),
     );
   }

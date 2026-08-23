@@ -96,6 +96,21 @@ class CleanError {
   final CleanFailure reason;
 }
 
+/// What one folder holds: its sub-folders, and the files lying in it.
+///
+/// The loose files travel as themselves rather than only as a total, so the
+/// row that stands for them can be opened and read.
+class DirectoryReport {
+  const DirectoryReport({required this.entries, required this.files});
+
+  /// Sub-folders, plus a row standing for the loose files when there are any.
+  final List<DirectoryEntry> entries;
+
+  /// The loose files, largest first, capped — the count and total on the entry
+  /// are of all of them, so what is missing here can still be counted.
+  final List<FileEntry> files;
+}
+
 /// A duplicate scan and whether it saw the whole tree.
 ///
 /// The walk stops at a fixed number of files so a scan of a very large tree
