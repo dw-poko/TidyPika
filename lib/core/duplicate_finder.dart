@@ -82,7 +82,15 @@ List<DuplicateGroup> findDuplicates(
   final sizeOfHash = <String, int>{};
 
   for (final entry in quickGroups.entries) {
-    final size = int.parse(entry.key.substring(0, entry.key.indexOf(':')));
+    final separator = entry.key.indexOf(':');
+    final size = int.parse(entry.key.substring(0, separator));
+    final quickHash = entry.key.substring(separator + 1);
+
+    // The quick hash covers the first 4 KB, so for a file no larger than that
+    // it already is the full hash. Re-reading those files would spend a second
+    // pass confirming something the first pass settled, which on a tree full
+    // of small duplicates is half the reading this phase does.
+    final settled = size <= _quickHashSize;
 
     for (final path in entry.value) {
       done++;
@@ -98,7 +106,7 @@ List<DuplicateGroup> findDuplicates(
         );
       }
 
-      final hash = _hashFile(path);
+      final hash = settled ? quickHash : _hashFile(path);
       if (hash == null) continue;
 
       fullGroups.putIfAbsent(hash, () => <String>[]).add(path);

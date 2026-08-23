@@ -17,6 +17,18 @@
   next restart. Removing the paging file altogether is the one setting here
   that can destabilise a machine, and the dialog says so before you pick it.
 
+### Changed
+
+- **Duplicates copes with large groups.** A group used to be one card with its
+  files in a column, and a column builds everything it holds — so a group with
+  a few thousand copies cost a few thousand widgets on every rebuild, and a
+  rebuild is every checkbox. Headers and files are now one flat list, so only
+  what is on screen is built however large a group gets. The selected total is
+  kept as it changes rather than recounted from every file on every rebuild.
+- Files of 4 KB or less are no longer hashed twice while scanning: the quick
+  hash already covers them whole, so the confirming pass reuses it. On a tree
+  full of small duplicates that is half the reading gone.
+
 ## v0.0.2
 
 Quick Clean was doing less than it reported and would not say why. Most of
