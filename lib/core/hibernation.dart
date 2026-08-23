@@ -9,20 +9,28 @@ import 'win32.dart';
 /// Windows reserves it up front, sized from installed memory, and it sits
 /// there whether or not the machine ever hibernates — on a 32 GB PC that is
 /// commonly several gigabytes of the system drive doing nothing.
+/// Whether the feature is on, off, or not something this app could find out.
+///
+/// The third case is not a nicety: every wrong answer this card has given was
+/// a failed read shown as an off switch.
+enum HibernationState { on, off, unknown }
+
 class HibernationInfo {
   const HibernationInfo({
     required this.path,
-    required this.enabled,
+    required this.state,
     required this.size,
   });
 
   final String path;
 
-  final bool enabled;
+  final HibernationState state;
 
   /// Null when the size could not be read, which is not the same as the
-  /// feature being off — hence [enabled] being asked separately.
+  /// feature being off — hence [state] being asked separately.
   final int? size;
+
+  bool get enabled => state == HibernationState.on;
 }
 
 String hibernationFile() {
@@ -58,11 +66,21 @@ HibernationInfo readHibernation() {
 
   return HibernationInfo(
     path: path,
-    // The registry is the answer; the file is the fallback for the case where
-    // even that cannot be read.
-    enabled: _hibernateEnabled() ?? (size != null),
+    state: _stateFrom(_hibernateEnabled(), size),
     size: size,
   );
+}
+
+/// The setting decides. Without it, a file that is there still proves the
+/// feature is on — but a file that is not there proves nothing, since a read
+/// that failed and a file that is absent look the same from here. That case
+/// is reported as unknown rather than guessed at as off.
+HibernationState _stateFrom(bool? setting, int? size) {
+  if (setting != null) {
+    return setting ? HibernationState.on : HibernationState.off;
+  }
+
+  return size != null ? HibernationState.on : HibernationState.unknown;
 }
 
 /// Turns the feature on or off through `powercfg`, which is the only supported

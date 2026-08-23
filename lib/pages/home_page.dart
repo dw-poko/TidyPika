@@ -305,12 +305,23 @@ class _HibernationCard extends StatelessWidget {
   final bool busy;
   final ValueChanged<bool>? onChanged;
 
+  String _subtitle() => switch (info.state) {
+        HibernationState.on => info.path,
+        HibernationState.off => t('hiber.none'),
+        HibernationState.unknown => t('hiber.unknown'),
+      };
+
   @override
   Widget build(BuildContext context) {
     LanguageScope.watch(context);
 
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+
+    // A switch has two positions and no way to sit between them, so when the
+    // state could not be read it is left alone rather than shown in a position
+    // that would be a guess.
+    final known = info.state != HibernationState.unknown;
 
     return Card(
       margin: EdgeInsets.zero,
@@ -331,7 +342,7 @@ class _HibernationCard extends StatelessWidget {
                   Text(t('hiber.title'), style: theme.textTheme.titleSmall),
                   const SizedBox(height: 2),
                   Text(
-                    info.enabled ? info.path : t('hiber.none'),
+                    _subtitle(),
                     overflow: TextOverflow.ellipsis,
                     style: theme.textTheme.bodySmall
                         ?.copyWith(color: scheme.onSurfaceVariant),
@@ -358,7 +369,10 @@ class _HibernationCard extends StatelessWidget {
                 child: CircularProgressIndicator(strokeWidth: 2),
               )
             else
-              Switch(value: info.enabled, onChanged: onChanged),
+              Switch(
+                value: info.enabled,
+                onChanged: known ? onChanged : null,
+              ),
           ],
         ),
       ),

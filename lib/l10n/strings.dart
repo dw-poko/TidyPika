@@ -162,6 +162,7 @@ const Map<String, String> _en = {
 
   'hiber.title': 'Hibernation',
   'hiber.none': 'Off — no hibernation file on disk',
+  'hiber.unknown': 'The setting could not be read',
   'hiber.confirmOn': 'Turn hibernation on?',
   'hiber.confirmOff': 'Turn hibernation off?',
   'hiber.bodyOn':
@@ -339,6 +340,7 @@ const Map<String, String> _ko = {
 
   'hiber.title': '최대 절전 모드',
   'hiber.none': '꺼짐 — 최대 절전 파일 없음',
+  'hiber.unknown': '설정을 읽지 못했습니다',
   'hiber.confirmOn': '최대 절전 모드를 켤까요?',
   'hiber.confirmOff': '최대 절전 모드를 끌까요?',
   'hiber.bodyOn':
@@ -512,6 +514,7 @@ const Map<String, String> _ja = {
 
   'hiber.title': 'ハイバネーション',
   'hiber.none': 'オフ — ハイバネーションファイルなし',
+  'hiber.unknown': '設定を読み取れませんでした',
   'hiber.confirmOn': 'ハイバネーションを有効にしますか?',
   'hiber.confirmOff': 'ハイバネーションを無効にしますか?',
   'hiber.bodyOn':
@@ -684,6 +687,7 @@ const Map<String, String> _zh = {
 
   'hiber.title': '休眠',
   'hiber.none': '已关闭 — 没有休眠文件',
+  'hiber.unknown': '无法读取该设置',
   'hiber.confirmOn': '要开启休眠吗?',
   'hiber.confirmOff': '要关闭休眠吗?',
   'hiber.bodyOn':
