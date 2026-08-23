@@ -75,9 +75,10 @@ class _QuickCleanPageState extends State<QuickCleanPage> {
           if (!mounted) return;
           setState(() {
             _results = results;
-            _selected
-              ..clear()
-              ..addAll(List.generate(results.length, (i) => i));
+            // Nothing starts ticked. Every target here is safe to clean but
+            // not every one is wanted, and a list that arrives pre-selected
+            // invites a delete nobody read first.
+            _selected.clear();
             _busy = false;
           });
 
@@ -241,7 +242,7 @@ class _QuickCleanPageState extends State<QuickCleanPage> {
             children: [
               Flexible(
                 child: Text(
-                  result.target.name,
+                  t('target.${result.target.id}'),
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
@@ -250,7 +251,7 @@ class _QuickCleanPageState extends State<QuickCleanPage> {
             ],
           ),
           subtitle: Text(
-            result.target.description,
+            t('target.${result.target.id}.desc'),
             overflow: TextOverflow.ellipsis,
           ),
           trailing: Row(

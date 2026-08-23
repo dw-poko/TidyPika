@@ -19,37 +19,31 @@ List<CleanTarget> getCleanTargets() {
 
   return [
     CleanTarget(
-      name: 'Windows Temp',
-      description: 'Windows temporary files',
+      id: 'windowsTemp',
       paths: [p.join(windows, 'Temp')],
     ),
     CleanTarget(
-      name: 'User Temp',
-      description: 'User temporary files',
+      id: 'userTemp',
       paths: [temp],
     ),
     CleanTarget(
-      name: 'Prefetch',
-      description: 'Windows Prefetch cache',
+      id: 'prefetch',
       paths: [p.join(windows, 'Prefetch')],
       patterns: const ['*.pf'],
       risk: Risk.medium,
     ),
     CleanTarget(
-      name: 'Thumbnail Cache',
-      description: 'Explorer thumbnail database',
+      id: 'thumbnails',
       paths: [p.join(localAppData, 'Microsoft', 'Windows', 'Explorer')],
       patterns: const ['thumbcache_*.db'],
     ),
     CleanTarget(
-      name: 'Windows Update Cache',
-      description: 'Downloaded update files',
+      id: 'windowsUpdate',
       paths: [p.join(windows, 'SoftwareDistribution', 'Download')],
       risk: Risk.medium,
     ),
     CleanTarget(
-      name: 'Log Files',
-      description: 'System and application logs',
+      id: 'logs',
       paths: [
         p.join(windows, 'Logs'),
         p.join(windows, 'System32', 'LogFiles'),
@@ -57,8 +51,7 @@ List<CleanTarget> getCleanTargets() {
       patterns: const ['*.log', '*.etl', '*.old'],
     ),
     CleanTarget(
-      name: 'Crash Dumps',
-      description: 'Windows crash dump files',
+      id: 'crashDumps',
       paths: [
         p.join(windows, 'Minidump'),
         p.join(localAppData, 'CrashDumps'),
@@ -66,8 +59,7 @@ List<CleanTarget> getCleanTargets() {
       patterns: const ['*.dmp'],
     ),
     CleanTarget(
-      name: 'Chrome Cache',
-      description: 'Google Chrome browser cache',
+      id: 'chromeCache',
       paths: [
         p.join(localAppData, 'Google', 'Chrome', 'User Data', 'Default', 'Cache'),
         p.join(
@@ -81,8 +73,7 @@ List<CleanTarget> getCleanTargets() {
       ],
     ),
     CleanTarget(
-      name: 'Edge Cache',
-      description: 'Microsoft Edge browser cache',
+      id: 'edgeCache',
       paths: [
         p.join(localAppData, 'Microsoft', 'Edge', 'User Data', 'Default', 'Cache'),
         p.join(
@@ -96,13 +87,11 @@ List<CleanTarget> getCleanTargets() {
       ],
     ),
     CleanTarget(
-      name: 'pip Cache',
-      description: 'Python pip download cache',
+      id: 'pipCache',
       paths: [p.join(localAppData, 'pip', 'cache')],
     ),
     CleanTarget(
-      name: 'npm Cache',
-      description: 'Node.js npm cache',
+      id: 'npmCache',
       paths: [p.join(appData, 'npm-cache')],
     ),
   ];
@@ -162,7 +151,7 @@ ScanResult scanTarget(
         onProgress?.call(
           ScanProgress(
             ScanStage.scanning,
-            detail: target.name,
+            detail: target.id,
             current: current,
             total: total,
             processed: seen,
@@ -201,7 +190,7 @@ List<ScanResult> scanAllTargets({ProgressCallback? onProgress}) {
     onProgress?.call(
       ScanProgress(
         ScanStage.scanning,
-        detail: target.name,
+        detail: target.id,
         current: i,
         total: targets.length,
         processed: seen,

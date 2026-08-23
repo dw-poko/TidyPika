@@ -253,6 +253,46 @@ Future<bool> confirmDelete(
   return confirmed ?? false;
 }
 
+/// Said once at startup, before anything is scanned.
+///
+/// Without elevation the Windows folders are not merely undeletable — much of
+/// what is in them cannot even be listed, so the scan under-reports and the
+/// numbers look wrong rather than restricted.
+Future<void> showElevationNotice(BuildContext context) {
+  return showDialog<void>(
+    context: context,
+    builder: (context) => const _ElevationNotice(),
+  );
+}
+
+class _ElevationNotice extends StatelessWidget {
+  const _ElevationNotice();
+
+  @override
+  Widget build(BuildContext context) {
+    LanguageScope.watch(context);
+
+    return AlertDialog(
+      icon: const Icon(Icons.shield_outlined),
+      title: Text(t('elevate.title')),
+      content: SizedBox(width: 460, child: Text(t('elevate.body'))),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(t('elevate.continue')),
+        ),
+        FilledButton.icon(
+          onPressed: () {
+            if (relaunchElevated()) exit(0);
+          },
+          icon: const Icon(Icons.shield_outlined, size: 18),
+          label: Text(t('result.elevate')),
+        ),
+      ],
+    );
+  }
+}
+
 Future<void> showCleanResult(BuildContext context, CleanResult result) {
   return showDialog<void>(
     context: context,

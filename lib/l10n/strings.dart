@@ -121,6 +121,37 @@ const Map<String, String> _en = {
   'quick.hideFiles': 'Hide files',
   'quick.more': '{0} more files not shown',
 
+  'target.windowsTemp': 'Windows Temp',
+  'target.windowsTemp.desc': 'Windows temporary files',
+  'target.userTemp': 'User Temp',
+  'target.userTemp.desc': 'User temporary files',
+  'target.prefetch': 'Prefetch',
+  'target.prefetch.desc': 'Windows Prefetch cache',
+  'target.thumbnails': 'Thumbnail Cache',
+  'target.thumbnails.desc': 'Explorer thumbnail database',
+  'target.windowsUpdate': 'Windows Update Cache',
+  'target.windowsUpdate.desc': 'Downloaded update files',
+  'target.logs': 'Log Files',
+  'target.logs.desc': 'System and application logs',
+  'target.crashDumps': 'Crash Dumps',
+  'target.crashDumps.desc': 'Windows crash dump files',
+  'target.chromeCache': 'Chrome Cache',
+  'target.chromeCache.desc': 'Google Chrome browser cache',
+  'target.edgeCache': 'Edge Cache',
+  'target.edgeCache.desc': 'Microsoft Edge browser cache',
+  'target.pipCache': 'pip Cache',
+  'target.pipCache.desc': 'Python pip download cache',
+  'target.npmCache': 'npm Cache',
+  'target.npmCache.desc': 'Node.js npm cache',
+
+  'elevate.title': 'Running as administrator is recommended',
+  'elevate.body':
+      'TidyPika is running with ordinary permissions. Files only an '
+      'administrator can see — Windows Update downloads, the Windows temp '
+      'folder, system logs — are left out of the scan, and what does show up '
+      'there cannot be deleted. Restart elevated to work on all of it.',
+  'elevate.continue': 'Continue anyway',
+
   'large.title': 'Large Files',
   'large.subtitle': 'Track down the files using the most space',
   'large.minSize': 'Minimum size',
@@ -213,6 +244,36 @@ const Map<String, String> _ko = {
   'quick.showFiles': '파일 목록 보기',
   'quick.hideFiles': '파일 목록 숨기기',
   'quick.more': '파일 {0}개는 표시하지 않았습니다',
+
+  'target.windowsTemp': 'Windows 임시 파일',
+  'target.windowsTemp.desc': 'Windows 임시 폴더에 쌓인 파일',
+  'target.userTemp': '사용자 임시 파일',
+  'target.userTemp.desc': '사용자 계정의 임시 폴더',
+  'target.prefetch': 'Prefetch',
+  'target.prefetch.desc': '앱 실행을 앞당기려고 만드는 미리 읽기 캐시',
+  'target.thumbnails': '썸네일 캐시',
+  'target.thumbnails.desc': '탐색기 미리 보기 이미지 데이터베이스',
+  'target.windowsUpdate': 'Windows Update 캐시',
+  'target.windowsUpdate.desc': '내려받아 둔 업데이트 설치 파일',
+  'target.logs': '로그 파일',
+  'target.logs.desc': '시스템·응용 프로그램 로그',
+  'target.crashDumps': '크래시 덤프',
+  'target.crashDumps.desc': '프로그램이 비정상 종료할 때 남는 덤프',
+  'target.chromeCache': 'Chrome 캐시',
+  'target.chromeCache.desc': 'Google Chrome 브라우저 캐시',
+  'target.edgeCache': 'Edge 캐시',
+  'target.edgeCache.desc': 'Microsoft Edge 브라우저 캐시',
+  'target.pipCache': 'pip 캐시',
+  'target.pipCache.desc': 'Python pip 다운로드 캐시',
+  'target.npmCache': 'npm 캐시',
+  'target.npmCache.desc': 'Node.js npm 캐시',
+
+  'elevate.title': '관리자 권한으로 실행하는 것을 권장합니다',
+  'elevate.body': '지금은 일반 권한으로 실행 중입니다. Windows Update 다운로드, '
+      'Windows 임시 폴더, 시스템 로그처럼 관리자 권한이 있어야 보이는 파일은 '
+      '검사에서 아예 빠지고, 보이더라도 삭제할 수 없습니다. 전부 정리하시려면 '
+      '관리자 권한으로 다시 실행하세요.',
+  'elevate.continue': '이대로 계속',
 
   'large.title': '대용량 파일',
   'large.subtitle': '공간을 가장 많이 쓰는 파일을 찾습니다',

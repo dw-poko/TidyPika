@@ -9,15 +9,18 @@ enum ScanStage { preparing, scanning, comparing, hashing, deleting, done }
 
 class CleanTarget {
   const CleanTarget({
-    required this.name,
-    required this.description,
+    required this.id,
     required this.paths,
     this.patterns = const ['*'],
     this.risk = Risk.low,
   });
 
-  final String name;
-  final String description;
+  /// Looks up `target.<id>` and `target.<id>.desc` for display. The targets are
+  /// built inside a scanning isolate, which holds its own copy of the language
+  /// setting and would answer in English whatever the window is showing, so the
+  /// words are chosen where they are drawn.
+  final String id;
+
   final List<String> paths;
   final List<String> patterns;
   final Risk risk;

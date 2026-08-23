@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 
+import 'core/win32.dart';
 import 'l10n/strings.dart';
 import 'pages/analyze_page.dart';
 import 'pages/duplicates_page.dart';
 import 'pages/home_page.dart';
 import 'pages/large_files_page.dart';
 import 'pages/quick_clean_page.dart';
+import 'widgets/common.dart';
 
 class TidyPikaApp extends StatelessWidget {
   const TidyPikaApp({super.key});
@@ -60,6 +62,17 @@ class _AppShellState extends State<AppShell> {
     DuplicatesPage(),
     AnalyzePage(),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+
+    // After the first frame: there is no Navigator to hang a dialog on until
+    // the shell is mounted.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && !isElevated()) showElevationNotice(context);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
