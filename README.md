@@ -39,7 +39,7 @@ download that unpacks to 27 MB.
 
 | Feature | Description |
 |---------|-------------|
-| **Quick Clean** | Scans eleven known cache and temp locations, cleans the ones you pick |
+| **Quick Clean** | Scans nineteen known cache and temp locations, cleans the ones you pick |
 | **Large Files** | Finds the biggest files under any folder, above a size you choose |
 | **Duplicates** | Byte-identical files, confirmed by SHA-256 content hash |
 | **Disk Analysis** | Which folders are using the space; click one to go in, breadcrumbs to come back |
@@ -54,8 +54,10 @@ download that unpacks to 27 MB.
 ### Cleanup targets
 
 Windows and user temp directories, Prefetch, thumbnail cache, Windows Update
-downloads, system and application logs, crash dumps, Chrome and Edge caches,
-and the pip and npm package caches.
+downloads, Delivery Optimization, Windows error reports, GPU shader caches,
+system and application logs, crash dumps, the Chrome, Edge and Firefox browser
+caches — every profile, not only the default one — the Teams, Discord, Slack
+and VS Code caches, and the pip and npm package caches.
 
 Reclaim Space reports what `hiberfil.sys` is costing and can turn
 hibernation off through `powercfg`, reclaiming that space. Windows sizes the
@@ -207,7 +209,7 @@ TidyPika는 디스크를 잡아먹는 것들 — 임시 파일, 브라우저 캐
 
 | 기능 | 설명 |
 |------|------|
-| **빠른 정리** | 알려진 캐시·임시 폴더 11곳을 검사하고, 고른 항목만 삭제 |
+| **빠른 정리** | 알려진 캐시·임시 폴더 19곳을 검사하고, 고른 항목만 삭제 |
 | **대용량 파일** | 지정한 폴더에서 정해둔 크기 이상인 파일을 큰 순서로 |
 | **중복 파일** | SHA-256 내용 해시로 확인한, 바이트 단위로 동일한 파일 |
 | **디스크 분석** | 어떤 폴더가 공간을 쓰는지. 눌러서 들어가고, 경로 표시로 되돌아오기 |
@@ -222,7 +224,9 @@ TidyPika는 디스크를 잡아먹는 것들 — 임시 파일, 브라우저 캐
 ### 정리 대상
 
 Windows·사용자 임시 폴더, Prefetch, 썸네일 캐시, Windows Update 다운로드,
-시스템·응용 프로그램 로그, 크래시 덤프, Chrome·Edge 캐시, pip·npm 패키지 캐시.
+시스템·응용 프로그램 로그, 크래시 덤프, 배달 최적화, Windows 오류 보고, GPU
+셰이더 캐시, Chrome·Edge·Firefox 브라우저 캐시(기본 프로필뿐 아니라 전체),
+Teams·Discord·Slack·VS Code 캐시, pip·npm 패키지 캐시.
 
 용량 줄이기 화면에서 `hiberfil.sys`가 차지하는 용량을 보여주고, `powercfg`로 최대 절전
 모드를 꺼서 그 공간을 회수할 수 있습니다. Windows는 설치된 메모리 크기에 맞춰 이

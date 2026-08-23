@@ -4,6 +4,11 @@
 
 ### Added
 
+- **Quick Clean covers nineteen places, not eleven.** Delivery Optimization,
+  Windows error reports, GPU shader caches, and the Teams, Discord, Slack and
+  VS Code caches. Firefox joins Chrome and Edge — and all three now cover every
+  browser profile rather than only the default one, which had been quietly
+  missing the caches of anyone with a second profile.
 - **Duplicates says when it stopped early.** The walk gives up after a fixed
   number of files so a very large tree cannot run away with memory, and until
   now it gave up in silence — a partial result that looked complete. It now

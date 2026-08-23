@@ -16,6 +16,7 @@ List<CleanTarget> getCleanTargets() {
   final appData =
       env['APPDATA'] ?? p.join(env['USERPROFILE'] ?? r'C:\', 'AppData', 'Roaming');
   final temp = env['TEMP'] ?? env['TMP'] ?? p.join(localAppData, 'Temp');
+  final programData = env['ProgramData'] ?? r'C:\ProgramData';
 
   return [
     CleanTarget(
@@ -60,30 +61,60 @@ List<CleanTarget> getCleanTargets() {
     ),
     CleanTarget(
       id: 'chromeCache',
-      paths: [
-        p.join(localAppData, 'Google', 'Chrome', 'User Data', 'Default', 'Cache'),
-        p.join(
-          localAppData,
-          'Google',
-          'Chrome',
-          'User Data',
-          'Default',
-          'Code Cache',
-        ),
-      ],
+      paths: chromiumCaches(
+        p.join(localAppData, 'Google', 'Chrome', 'User Data'),
+      ),
     ),
     CleanTarget(
       id: 'edgeCache',
+      paths: chromiumCaches(
+        p.join(localAppData, 'Microsoft', 'Edge', 'User Data'),
+      ),
+    ),
+    CleanTarget(
+      id: 'firefoxCache',
+      paths: firefoxCaches(localAppData),
+    ),
+    CleanTarget(
+      id: 'deliveryOptimization',
+      paths: [p.join(windows, 'SoftwareDistribution', 'DeliveryOptimization')],
+      risk: Risk.medium,
+    ),
+    CleanTarget(
+      id: 'errorReports',
       paths: [
-        p.join(localAppData, 'Microsoft', 'Edge', 'User Data', 'Default', 'Cache'),
-        p.join(
-          localAppData,
-          'Microsoft',
-          'Edge',
-          'User Data',
-          'Default',
-          'Code Cache',
-        ),
+        p.join(localAppData, 'Microsoft', 'Windows', 'WER', 'ReportArchive'),
+        p.join(localAppData, 'Microsoft', 'Windows', 'WER', 'ReportQueue'),
+        p.join(programData, 'Microsoft', 'Windows', 'WER', 'ReportArchive'),
+        p.join(programData, 'Microsoft', 'Windows', 'WER', 'ReportQueue'),
+      ],
+    ),
+    CleanTarget(
+      id: 'shaderCache',
+      paths: [
+        p.join(localAppData, 'D3DSCache'),
+        p.join(localAppData, 'NVIDIA', 'DXCache'),
+        p.join(localAppData, 'NVIDIA', 'GLCache'),
+        p.join(localAppData, 'AMD', 'DxCache'),
+      ],
+    ),
+    CleanTarget(
+      id: 'teamsCache',
+      paths: electronCaches(p.join(appData, 'Microsoft', 'Teams')),
+    ),
+    CleanTarget(
+      id: 'discordCache',
+      paths: electronCaches(p.join(appData, 'discord')),
+    ),
+    CleanTarget(
+      id: 'slackCache',
+      paths: electronCaches(p.join(appData, 'Slack')),
+    ),
+    CleanTarget(
+      id: 'vscodeCache',
+      paths: [
+        ...electronCaches(p.join(appData, 'Code')),
+        p.join(appData, 'Code', 'CachedData'),
       ],
     ),
     CleanTarget(
@@ -96,6 +127,40 @@ List<CleanTarget> getCleanTargets() {
     ),
   ];
 }
+
+/// Cache folders under every profile of a Chromium browser, not only the
+/// default one. A second profile's cache is the same kind of file and just as
+/// disposable, and listing only `Default` quietly missed it.
+///
+/// Directories that turn out not to exist are skipped by the scan, so nothing
+/// is lost by naming a few that never will.
+List<String> chromiumCaches(String userData) {
+  const folders = ['Cache', 'Code Cache', 'GPUCache'];
+
+  return [
+    for (final profile in [userData, ...listSubdirectories(userData)])
+      for (final folder in folders) p.join(profile, folder),
+  ];
+}
+
+/// Firefox keeps a cache per profile under a directory named for the profile,
+/// so the profiles have to be looked up rather than written down.
+List<String> firefoxCaches(String localAppData) {
+  final profiles = p.join(localAppData, 'Mozilla', 'Firefox', 'Profiles');
+
+  return [
+    for (final profile in listSubdirectories(profiles))
+      p.join(profile, 'cache2'),
+  ];
+}
+
+/// The cache directories every Electron application keeps in the same shape.
+List<String> electronCaches(String root) => [
+      p.join(root, 'Cache'),
+      p.join(root, 'Code Cache'),
+      p.join(root, 'GPUCache'),
+      p.join(root, 'Service Worker', 'CacheStorage'),
+    ];
 
 bool matchesPatterns(String fileName, List<String> patterns) {
   if (patterns.isEmpty || (patterns.length == 1 && patterns.first == '*')) {
