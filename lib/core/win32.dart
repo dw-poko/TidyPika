@@ -173,6 +173,11 @@ int? fileSizeFromDirectory(String path) {
 /// widened to pointer size, so the sign extension matters on x64.
 const int hkeyLocalMachine = -2147483646;
 
+// From winreg.h, in the order the types are numbered there: NONE 0x01,
+// SZ 0x02, EXPAND_SZ 0x04, BINARY 0x08, DWORD 0x10, MULTI_SZ 0x20, QWORD 0x40.
+// Naming one and writing another's number reads as a value that cannot be
+// found rather than as a mistake, since RegGetValue answers a type mismatch by
+// refusing the call.
 const int _rrfRtRegDword = 0x00000010;
 
 final int Function(
@@ -203,7 +208,7 @@ final int Function(
       Pointer<Uint32>,
     )>('RegGetValueW');
 
-const int _rrfRtRegMultiSz = 0x00000040;
+const int _rrfRtRegMultiSz = 0x00000020;
 
 /// Reads a REG_MULTI_SZ.
 ///
