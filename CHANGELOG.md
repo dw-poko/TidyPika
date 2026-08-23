@@ -10,6 +10,12 @@
   ever hibernates, so it is often several gigabytes doing nothing. Changing
   the setting needs administrator rights, and Fast Startup uses the same file,
   so it turns off along with it.
+- **Virtual memory on the dashboard.** What `pagefile.sys` occupies across
+  drives, how Windows is set to size it, and a dialog that hands the setting
+  back to Windows, pins it to a range on the system drive, or removes it. The
+  change goes through WMI, needs administrator rights, and takes effect at the
+  next restart. Removing the paging file altogether is the one setting here
+  that can destabilise a machine, and the dialog says so before you pick it.
 
 ## v0.0.2
 

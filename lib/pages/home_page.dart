@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../core/disk_scanner.dart';
 import '../core/hibernation.dart';
 import '../core/models.dart';
+import '../core/pagefile.dart';
 import '../core/size_formatter.dart';
 import '../core/win32.dart';
 import '../l10n/strings.dart';
@@ -18,7 +19,9 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   List<DiskInfo> _disks = const [];
   HibernationInfo? _hibernation;
+  PagefileInfo? _pagefile;
   bool _busy = false;
+  bool _pageBusy = false;
 
   @override
   void initState() {
@@ -41,10 +44,70 @@ class _HomePageState extends State<HomePage> {
       hibernation = null;
     }
 
+    PagefileInfo? pagefile;
+    try {
+      pagefile = readPagefile();
+    } catch (_) {
+      pagefile = null;
+    }
+
     setState(() {
       _disks = disks;
       _hibernation = hibernation;
+      _pagefile = pagefile;
     });
+  }
+
+  Future<void> _changePagefile() async {
+    final info = _pagefile;
+    if (info == null) return;
+
+    final choice = await showDialog<_PagefileChoice>(
+      context: context,
+      builder: (context) => _PagefileDialog(info: info),
+    );
+    if (choice == null || !mounted) return;
+
+    if (!isElevated()) {
+      await showElevationNotice(context, messageKey: 'page.needsAdmin');
+      return;
+    }
+
+    setState(() => _pageBusy = true);
+
+    final pending = switch (choice.mode) {
+      PagefileMode.custom => setPagefileCustom(
+          initialMb: choice.initialMb,
+          maximumMb: choice.maximumMb,
+        ),
+      PagefileMode.none => setPagefileNone(),
+      _ => setPagefileAutomatic(),
+    };
+
+    final result = await pending;
+    if (!mounted) return;
+    setState(() => _pageBusy = false);
+
+    if (result.exitCode != 0) {
+      final output = '${result.stdout}\n${result.stderr}'.trim();
+      await showErrorDialog(
+        context,
+        output.isEmpty
+            ? '${t('page.failed')}\n\nexit code ${result.exitCode}'
+            : '${t('page.failed')}\n\n$output',
+      );
+    } else {
+      // Nothing on disk changes until the next boot, so say so rather than
+      // letting a refreshed card that looks unchanged read as a failure.
+      await showNoticeDialog(
+        context,
+        title: t('page.rebootTitle'),
+        body: t('page.reboot'),
+      );
+    }
+
+    if (!mounted) return;
+    _load();
   }
 
   Future<void> _setHibernation(bool enabled) async {
@@ -105,6 +168,14 @@ class _HomePageState extends State<HomePage> {
               info: _hibernation!,
               busy: _busy,
               onChanged: _busy ? null : _setHibernation,
+            ),
+            const SizedBox(height: 12),
+          ],
+          if (_pagefile != null) ...[
+            _PagefileCard(
+              info: _pagefile!,
+              busy: _pageBusy,
+              onChange: _pageBusy ? null : _changePagefile,
             ),
             const SizedBox(height: 16),
           ],
@@ -334,3 +405,285 @@ class _HibernationConfirm extends StatelessWidget {
     );
   }
 }
+
+/// What the paging file is costing, how Windows is set to size it, and the way
+/// in to changing that.
+class _PagefileCard extends StatelessWidget {
+  const _PagefileCard({
+    required this.info,
+    required this.busy,
+    required this.onChange,
+  });
+
+  final PagefileInfo info;
+  final bool busy;
+  final VoidCallback? onChange;
+
+  String _modeLabel() => switch (info.mode) {
+        PagefileMode.automatic => t('page.auto'),
+        PagefileMode.systemManaged => t('page.system'),
+        PagefileMode.none => t('page.none'),
+        PagefileMode.unknown => t('page.unknown'),
+        PagefileMode.custom => _customLabel(),
+      };
+
+  String _customLabel() {
+    final entry = info.entries.firstWhere(
+      (entry) => !entry.isAutomatic && !entry.isSystemManaged,
+      orElse: () => const PagefileEntry(path: ''),
+    );
+
+    return tf('page.custom', [entry.initialMb ?? 0, entry.maximumMb ?? 0]);
+  }
+
+  String _subtitle() {
+    if (info.mode == PagefileMode.unknown) return t('page.unknown');
+    if (info.mode == PagefileMode.none && info.files.isEmpty) {
+      return t('page.none');
+    }
+
+    // What is on disk when there is anything, otherwise what is configured:
+    // a setting made and not yet rebooted into has no file to point at.
+    final where = info.files.isNotEmpty
+        ? info.files.join(', ')
+        : [for (final entry in info.entries) entry.path].join(', ');
+
+    return where.isEmpty ? _modeLabel() : '$where  ·  ${_modeLabel()}';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    LanguageScope.watch(context);
+
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+
+    return Card(
+      margin: EdgeInsets.zero,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 14, 16, 14),
+        child: Row(
+          children: [
+            Icon(Icons.memory, size: 20, color: scheme.onSurfaceVariant),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(t('page.title'), style: theme.textTheme.titleSmall),
+                  const SizedBox(height: 2),
+                  Text(
+                    _subtitle(),
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodySmall
+                        ?.copyWith(color: scheme.onSurfaceVariant),
+                  ),
+                ],
+              ),
+            ),
+            if (info.totalSize > 0) ...[
+              const SizedBox(width: 12),
+              Text(
+                formatSize(info.totalSize),
+                style: theme.textTheme.titleMedium
+                    ?.copyWith(fontWeight: FontWeight.w600),
+              ),
+            ],
+            const SizedBox(width: 16),
+            if (busy)
+              const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
+            else
+              OutlinedButton(
+                onPressed: onChange,
+                child: Text(t('page.change')),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// What the dialog decided. [mode] is only ever automatic, custom or none —
+/// systemManaged and unknown describe a machine, not a choice.
+class _PagefileChoice {
+  const _PagefileChoice(this.mode, {this.initialMb = 0, this.maximumMb = 0});
+
+  final PagefileMode mode;
+  final int initialMb;
+  final int maximumMb;
+}
+
+class _PagefileDialog extends StatefulWidget {
+  const _PagefileDialog({required this.info});
+
+  final PagefileInfo info;
+
+  @override
+  State<_PagefileDialog> createState() => _PagefileDialogState();
+}
+
+class _PagefileDialogState extends State<_PagefileDialog> {
+  static const List<PagefileMode> _options = [
+    PagefileMode.automatic,
+    PagefileMode.custom,
+    PagefileMode.none,
+  ];
+
+  late PagefileMode _choice;
+  late final TextEditingController _initial;
+  late final TextEditingController _maximum;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+
+    final entry = widget.info.entries.firstWhere(
+      (entry) => !entry.isAutomatic && !entry.isSystemManaged,
+      orElse: () => const PagefileEntry(path: ''),
+    );
+
+    _choice = switch (widget.info.mode) {
+      PagefileMode.custom => PagefileMode.custom,
+      PagefileMode.none => PagefileMode.none,
+      _ => PagefileMode.automatic,
+    };
+
+    // Defaults for a machine that has never had a range set by hand.
+    _initial = TextEditingController(text: '${entry.initialMb ?? 2048}');
+    _maximum = TextEditingController(text: '${entry.maximumMb ?? 8192}');
+  }
+
+  @override
+  void dispose() {
+    _initial.dispose();
+    _maximum.dispose();
+    super.dispose();
+  }
+
+  String _label(PagefileMode mode) => switch (mode) {
+        PagefileMode.custom =>
+          tf('page.optionCustom', [systemDriveRoot()]),
+        PagefileMode.none => t('page.optionNone'),
+        _ => t('page.optionAuto'),
+      };
+
+  void _apply() {
+    if (_choice != PagefileMode.custom) {
+      Navigator.of(context).pop(_PagefileChoice(_choice));
+      return;
+    }
+
+    final initial = int.tryParse(_initial.text.trim()) ?? 0;
+    final maximum = int.tryParse(_maximum.text.trim()) ?? 0;
+
+    if (initial <= 0 || maximum < initial) {
+      setState(() => _error = t('page.invalidSize'));
+      return;
+    }
+
+    Navigator.of(context).pop(
+      _PagefileChoice(
+        PagefileMode.custom,
+        initialMb: initial,
+        maximumMb: maximum,
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    LanguageScope.watch(context);
+
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+
+    return AlertDialog(
+      icon: const Icon(Icons.memory),
+      title: Text(t('page.dialogTitle')),
+      content: SizedBox(
+        width: 460,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            for (final option in _options)
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                onTap: () => setState(() {
+                  _choice = option;
+                  _error = null;
+                }),
+                leading: Icon(
+                  _choice == option
+                      ? Icons.radio_button_checked
+                      : Icons.radio_button_unchecked,
+                  color: _choice == option ? scheme.primary : scheme.outline,
+                ),
+                title: Text(_label(option)),
+              ),
+            if (_choice == PagefileMode.custom) ...[
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _initial,
+                      keyboardType: TextInputType.number,
+                      decoration: InputDecoration(
+                        labelText: t('page.initial'),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: TextField(
+                      controller: _maximum,
+                      keyboardType: TextInputType.number,
+                      decoration: InputDecoration(
+                        labelText: t('page.maximum'),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+            if (_choice == PagefileMode.none) ...[
+              const SizedBox(height: 8),
+              Text(
+                t('page.noneWarning'),
+                style: theme.textTheme.bodySmall?.copyWith(color: scheme.error),
+              ),
+            ],
+            if (_error != null) ...[
+              const SizedBox(height: 10),
+              Text(
+                _error!,
+                style: theme.textTheme.bodySmall?.copyWith(color: scheme.error),
+              ),
+            ],
+            const SizedBox(height: 14),
+            Text(
+              t('page.reboot'),
+              style: theme.textTheme.bodySmall
+                  ?.copyWith(color: scheme.onSurfaceVariant),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(t('common.cancel')),
+        ),
+        FilledButton(onPressed: _apply, child: Text(t('page.apply'))),
+      ],
+    );
+  }
+}
+

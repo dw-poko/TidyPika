@@ -45,6 +45,7 @@ download that unpacks to 27 MB.
 | **Disk Analysis** | Which sub-folders are using the space, with share-of-total bars |
 | **Drive Overview** | Free and used space across every attached drive |
 | **Hibernation** | What `hiberfil.sys` costs, and a switch that turns the feature off |
+| **Virtual memory** | What `pagefile.sys` costs, and the paging file set to automatic, a fixed range, or none |
 | **Live progress** | Stage, running file count and a real percentage |
 | **Cancel anytime** | Scans run on their own isolate and stop the moment you ask |
 | **Safe deletion** | Recycle Bin by default; system binaries are never touched |
@@ -61,6 +62,14 @@ hibernation off through `powercfg`, reclaiming that space. Windows sizes the
 file from installed memory and reserves it whether or not the machine ever
 hibernates. Changing the setting needs administrator rights, and Fast Startup
 uses the same file, so it turns off along with it.
+
+The card below it does the same for the paging file: what `pagefile.sys`
+occupies across drives, how Windows is set to size it, and a dialog to hand the
+setting back to Windows, pin it to a range on the system drive, or remove it.
+That goes through WMI, needs administrator rights, and takes effect at the next
+restart. Removing it altogether is the one setting here that can destabilise a
+machine: Windows can no longer write a crash dump, and a system under memory
+pressure has nowhere to spill.
 
 The targets under `C:\Windows` — Windows Update downloads above all — belong to
 SYSTEM and Administrators, and an account in the Administrators group still
@@ -142,6 +151,7 @@ lib/
 │   ├── cleaner.dart           # Recycle Bin / permanent deletion + guards
 │   ├── disk_scanner.dart      # Drive enumeration
 │   ├── hibernation.dart       # hiberfil.sys size, powercfg on/off
+│   ├── pagefile.dart          # pagefile.sys size, PagingFiles, WMI changes
 │   ├── win32.dart             # Hand-rolled FFI bindings
 │   └── tasks.dart             # Isolate plumbing and progress streaming
 ├── l10n/strings.dart          # en, ko, ja, zh string tables
@@ -199,6 +209,7 @@ TidyPika는 디스크를 잡아먹는 것들 — 임시 파일, 브라우저 캐
 | **디스크 분석** | 어떤 하위 폴더가 공간을 쓰는지, 전체 대비 비중 막대와 함께 |
 | **드라이브 현황** | 연결된 모든 드라이브의 여유·사용 공간 |
 | **최대 절전 모드** | `hiberfil.sys`가 차지하는 용량과, 기능을 끄는 스위치 |
+| **가상 메모리** | `pagefile.sys` 용량과, 페이징 파일을 자동·고정 크기·사용 안 함으로 설정 |
 | **실시간 진행률** | 단계, 누적 파일 수, 실제 퍼센트 |
 | **언제든 취소** | 검사는 별도 isolate에서 돌아서 누르는 즉시 멈춤 |
 | **안전한 삭제** | 기본은 휴지통, 시스템 바이너리는 건드리지 않음 |
@@ -214,6 +225,14 @@ Windows·사용자 임시 폴더, Prefetch, 썸네일 캐시, Windows Update 다
 파일을 미리 잡아두며, 실제로 최대 절전을 쓰든 안 쓰든 자리를 차지합니다. 설정
 변경에는 관리자 권한이 필요하고, 빠른 시작이 같은 파일을 쓰기 때문에 함께
 꺼집니다.
+
+그 아래 카드는 페이징 파일에 대해 같은 일을 합니다. 드라이브별 `pagefile.sys`가
+차지하는 용량, Windows가 크기를 어떻게 정하도록 설정돼 있는지, 그리고 설정을
+Windows에 다시 맡기거나 시스템 드라이브에 크기 범위를 지정하거나 아예 없애는
+대화상자입니다. WMI를 거치고, 관리자 권한이 필요하며, 다시 시작할 때
+적용됩니다. 완전히 없애는 선택은 여기서 유일하게 시스템을 불안정하게 만들 수
+있습니다. Windows가 크래시 덤프를 남기지 못하고, 메모리가 모자랄 때 밀어낼 곳이
+없어집니다.
 
 `C:\Windows` 아래 대상은 — 특히 Windows Update 다운로드는 — SYSTEM과
 Administrators의 소유이고, 관리자 그룹 계정이라도 권한을 올리기 전까지는 제한된

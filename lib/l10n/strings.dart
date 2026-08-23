@@ -182,6 +182,38 @@ const Map<String, String> _en = {
       'powercfg could not change the setting. Its own output '
       'follows.',
 
+  'page.title': 'Virtual memory',
+  'page.change': 'Change',
+  'page.none': 'Off — no paging file',
+  'page.unknown': 'The setting could not be read',
+  'page.auto': 'Managed by Windows',
+  'page.system': 'System managed size',
+  'page.custom': '{0}–{1} MB',
+  'page.dialogTitle': 'Paging file',
+  'page.optionAuto': 'Let Windows manage it',
+  'page.optionCustom': 'Set a size on {0}',
+  'page.optionNone': 'No paging file',
+  'page.initial': 'Initial (MB)',
+  'page.maximum': 'Maximum (MB)',
+  'page.noneWarning':
+      'Without a paging file the machine can run out of memory under '
+      'load, some programs refuse to start, and Windows cannot write '
+      'a crash dump.',
+  'page.invalidSize':
+      'Give an initial size above zero and a maximum no smaller '
+      'than it.',
+  'page.apply': 'Apply',
+  'page.needsAdmin':
+      'The paging file is a system setting, so changing it needs '
+      'administrator rights.',
+  'page.failed':
+      'The paging file setting could not be changed. The output '
+      'follows.',
+  'page.rebootTitle': 'Restart to apply',
+  'page.reboot':
+      'The paging file changes when Windows next starts. Nothing on '
+      'disk moves until then.',
+
   'large.title': 'Large Files',
   'large.subtitle': 'Track down the files using the most space',
   'large.minSize': 'Minimum size',
@@ -326,6 +358,34 @@ const Map<String, String> _ko = {
   'hiber.failed':
       'powercfg가 설정을 바꾸지 못했습니다. 아래는 powercfg가 낸 '
       '출력입니다.',
+
+  'page.title': '가상 메모리',
+  'page.change': '변경',
+  'page.none': '사용 안 함 — 페이징 파일 없음',
+  'page.unknown': '설정을 읽지 못했습니다',
+  'page.auto': 'Windows가 관리',
+  'page.system': '시스템이 크기 관리',
+  'page.custom': '{0}–{1} MB',
+  'page.dialogTitle': '페이징 파일',
+  'page.optionAuto': 'Windows가 관리하도록 맡기기',
+  'page.optionCustom': '{0}에 크기 지정',
+  'page.optionNone': '페이징 파일 사용 안 함',
+  'page.initial': '초기 크기(MB)',
+  'page.maximum': '최대 크기(MB)',
+  'page.noneWarning':
+      '페이징 파일이 없으면 부하가 걸릴 때 메모리가 모자랄 수 '
+      '있고, 일부 프로그램이 실행되지 않으며, Windows가 크래시 '
+      '덤프를 남기지 못합니다.',
+  'page.invalidSize':
+      '초기 크기는 0보다 커야 하고, 최대 크기는 초기 크기보다 '
+      '작을 수 없습니다.',
+  'page.apply': '적용',
+  'page.needsAdmin': '페이징 파일은 시스템 설정이라 관리자 권한이 필요합니다.',
+  'page.failed': '페이징 파일 설정을 바꾸지 못했습니다. 아래는 출력입니다.',
+  'page.rebootTitle': '다시 시작하면 적용됩니다',
+  'page.reboot':
+      '페이징 파일은 Windows를 다시 시작할 때 바뀝니다. 그때까지 '
+      '디스크에서 달라지는 것은 없습니다.',
 
   'large.title': '대용량 파일',
   'large.subtitle': '공간을 가장 많이 쓰는 파일을 찾습니다',
@@ -472,6 +532,34 @@ const Map<String, String> _ja = {
       'powercfg が設定を変更できませんでした。以下は powercfg の'
       '出力です。',
 
+  'page.title': '仮想メモリ',
+  'page.change': '変更',
+  'page.none': 'オフ — ページファイルなし',
+  'page.unknown': '設定を読み取れませんでした',
+  'page.auto': 'Windows が管理',
+  'page.system': 'システム管理サイズ',
+  'page.custom': '{0}–{1} MB',
+  'page.dialogTitle': 'ページファイル',
+  'page.optionAuto': 'Windows に任せる',
+  'page.optionCustom': '{0} にサイズを指定',
+  'page.optionNone': 'ページファイルなし',
+  'page.initial': '初期サイズ (MB)',
+  'page.maximum': '最大サイズ (MB)',
+  'page.noneWarning':
+      'ページファイルがないと、負荷時にメモリが不足したり、'
+      '起動しないプログラムが出たり、Windows がクラッシュ'
+      'ダンプを書けなくなります。',
+  'page.invalidSize':
+      '初期サイズは 0 より大きく、最大サイズは初期サイズ以上に'
+      'してください。',
+  'page.apply': '適用',
+  'page.needsAdmin': 'ページファイルはシステム設定なので管理者権限が必要です。',
+  'page.failed': 'ページファイルの設定を変更できませんでした。以下は出力です。',
+  'page.rebootTitle': '再起動後に反映されます',
+  'page.reboot':
+      'ページファイルは次に Windows を起動したときに変わります。'
+      'それまでディスク上は変わりません。',
+
   'large.title': '大きいファイル',
   'large.subtitle': '最も容量を使っているファイルを探します',
   'large.minSize': '最小サイズ',
@@ -611,6 +699,31 @@ const Map<String, String> _zh = {
   'hiber.disable': '关闭',
   'hiber.needsAdmin': '休眠属于系统设置，需要管理员权限。',
   'hiber.failed': 'powercfg 未能更改设置。以下是 powercfg 的输出。',
+
+  'page.title': '虚拟内存',
+  'page.change': '更改',
+  'page.none': '已关闭 — 没有页面文件',
+  'page.unknown': '无法读取该设置',
+  'page.auto': '由 Windows 管理',
+  'page.system': '系统管理的大小',
+  'page.custom': '{0}–{1} MB',
+  'page.dialogTitle': '页面文件',
+  'page.optionAuto': '交给 Windows 管理',
+  'page.optionCustom': '在 {0} 上指定大小',
+  'page.optionNone': '不使用页面文件',
+  'page.initial': '初始大小 (MB)',
+  'page.maximum': '最大大小 (MB)',
+  'page.noneWarning':
+      '没有页面文件时，负载高时可能内存不足，部分程序无法启动，'
+      'Windows 也无法写入崩溃转储。',
+  'page.invalidSize': '初始大小要大于 0，最大大小不能小于初始大小。',
+  'page.apply': '应用',
+  'page.needsAdmin': '页面文件属于系统设置，需要管理员权限。',
+  'page.failed': '未能更改页面文件设置。以下是输出。',
+  'page.rebootTitle': '重启后生效',
+  'page.reboot':
+      '页面文件会在下次启动 Windows 时更改。在此之前磁盘上不会有'
+      '变化。',
 
   'large.title': '大文件',
   'large.subtitle': '找出占用空间最多的文件',

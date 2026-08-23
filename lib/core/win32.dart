@@ -203,6 +203,81 @@ final int Function(
       Pointer<Uint32>,
     )>('RegGetValueW');
 
+const int _rrfRtRegMultiSz = 0x00000040;
+
+/// Reads a REG_MULTI_SZ.
+///
+/// Null means the value is missing or unreadable; an empty list means the
+/// value is there and holds nothing, which for `PagingFiles` is how "no paging
+/// file" is written down. The two must not be confused.
+List<String>? registryMultiSz(int root, String subKey, String valueName) {
+  final key = subKey.toNativeUtf16(allocator: calloc);
+  final name = valueName.toNativeUtf16(allocator: calloc);
+  final bytes = calloc<Uint32>();
+  Pointer<Uint16>? buffer;
+
+  try {
+    // First call sizes the buffer, second one fills it.
+    var status = regGetValue(
+      root,
+      key,
+      name,
+      _rrfRtRegMultiSz,
+      nullptr,
+      nullptr,
+      bytes,
+    );
+    if (status != 0) return null;
+
+    final units = bytes.value ~/ 2;
+    if (units == 0) return const [];
+
+    buffer = calloc<Uint16>(units + 1);
+    status = regGetValue(
+      root,
+      key,
+      name,
+      _rrfRtRegMultiSz,
+      nullptr,
+      buffer.cast<Void>(),
+      bytes,
+    );
+    if (status != 0) return null;
+
+    return _splitMultiSz(buffer, bytes.value ~/ 2);
+  } catch (_) {
+    return null;
+  } finally {
+    calloc
+      ..free(key)
+      ..free(name)
+      ..free(bytes);
+    if (buffer != null) calloc.free(buffer);
+  }
+}
+
+/// Strings run end to end, each ended by a NUL, the run ended by an empty one.
+List<String> _splitMultiSz(Pointer<Uint16> data, int units) {
+  final values = <String>[];
+  final current = <int>[];
+
+  for (var i = 0; i < units; i++) {
+    final unit = data[i];
+
+    if (unit != 0) {
+      current.add(unit);
+      continue;
+    }
+
+    if (current.isEmpty) break;
+
+    values.add(String.fromCharCodes(current));
+    current.clear();
+  }
+
+  return values;
+}
+
 /// Reads one REG_DWORD, or null if it is not there or cannot be read.
 int? registryDword(int root, String subKey, String valueName) {
   final key = subKey.toNativeUtf16(allocator: calloc);

@@ -617,6 +617,29 @@ class _FailedFile extends StatelessWidget {
   }
 }
 
+/// Plain "here is what happened" dialog, for outcomes that are neither an
+/// error nor a result worth a page of its own.
+Future<void> showNoticeDialog(
+  BuildContext context, {
+  required String title,
+  required String body,
+}) {
+  return showDialog<void>(
+    context: context,
+    builder: (context) => AlertDialog(
+      icon: const Icon(Icons.info_outline),
+      title: Text(title),
+      content: SizedBox(width: 440, child: Text(body)),
+      actions: [
+        FilledButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(t('result.close')),
+        ),
+      ],
+    ),
+  );
+}
+
 Future<void> showErrorDialog(BuildContext context, String message) {
   return showDialog<void>(
     context: context,
