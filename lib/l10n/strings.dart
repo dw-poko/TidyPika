@@ -256,6 +256,7 @@ const Map<String, String> _en = {
   'analyze.subtitle': 'See which folders are taking up space',
   'analyze.run': 'Analyze',
   'analyze.folders': '{0} folders',
+  'analyze.loose': 'Files in this folder',
 
   'col.files': 'Files',
   'col.size': 'Size',
@@ -454,6 +455,7 @@ const Map<String, String> _ko = {
   'analyze.subtitle': '어떤 폴더가 공간을 차지하는지 확인합니다',
   'analyze.run': '분석',
   'analyze.folders': '폴더 {0}개',
+  'analyze.loose': '이 폴더에 있는 파일',
 
   'col.files': '파일',
   'col.size': '크기',
@@ -652,6 +654,7 @@ const Map<String, String> _ja = {
   'analyze.subtitle': 'どのフォルダーが容量を使っているかを表示します',
   'analyze.run': '分析',
   'analyze.folders': '{0} フォルダー',
+  'analyze.loose': 'このフォルダー内のファイル',
 
   'col.files': 'ファイル数',
   'col.size': 'サイズ',
@@ -840,6 +843,7 @@ const Map<String, String> _zh = {
   'analyze.subtitle': '查看哪些文件夹占用了空间',
   'analyze.run': '分析',
   'analyze.folders': '{0} 个文件夹',
+  'analyze.loose': '此文件夹中的文件',
 
   'col.files': '文件数',
   'col.size': '大小',

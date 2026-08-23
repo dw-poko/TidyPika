@@ -53,12 +53,18 @@ class DirectoryEntry {
     required this.name,
     required this.size,
     required this.fileCount,
+    this.isLooseFiles = false,
   });
 
   final String path;
   final String name;
   final int size;
   final int fileCount;
+
+  /// Not a sub-folder but the files lying directly in the one being analysed.
+  /// Without it the total counts only what is in sub-folders, and every step
+  /// further in loses whatever was left behind at the last one.
+  final bool isLooseFiles;
 }
 
 class DuplicateGroup {

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../core/models.dart';
+import '../core/paths.dart';
 import '../core/size_formatter.dart';
 import '../core/tasks.dart';
 import '../l10n/strings.dart';
@@ -21,6 +22,13 @@ class _AnalyzePageState extends State<AnalyzePage> {
   final TextEditingController _path = TextEditingController(text: r'C:\');
 
   List<DirectoryEntry> _entries = const [];
+
+  /// The folder the results belong to. The path field is where a scan is
+  /// started from; this is where it actually got to, and the crumbs are read
+  /// off it rather than kept as a separate stack — typing a path and clicking
+  /// into one then behave the same.
+  String _current = '';
+
   bool _busy = false;
   StreamSubscription<TaskEvent>? _subscription;
 
@@ -39,15 +47,18 @@ class _AnalyzePageState extends State<AnalyzePage> {
     setState(() => _busy = false);
   }
 
-  void _analyze() {
-    final root = _path.text.trim();
+  void _analyze() => _analyzePath(_path.text.trim());
+
+  void _analyzePath(String root) {
     if (root.isEmpty) return;
 
     _subscription?.cancel();
     _monitor.start();
+    _path.text = root;
     setState(() {
       _busy = true;
       _entries = const [];
+      _current = root;
     });
 
     _subscription = analyzeDirectoryTask(root).listen((event) {
@@ -93,6 +104,13 @@ class _AnalyzePageState extends State<AnalyzePage> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           PathField(controller: _path, enabled: !_busy),
+          if (_current.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            _Breadcrumbs(
+              path: _current,
+              onSelected: _busy ? null : _analyzePath,
+            ),
+          ],
           const SizedBox(height: 16),
           if (showStatus) ...[
             ScanStatusPanel(
@@ -124,10 +142,19 @@ class _AnalyzePageState extends State<AnalyzePage> {
                       itemCount: _entries.length,
                       separatorBuilder: (context, index) =>
                           const Divider(height: 1),
-                      itemBuilder: (context, index) => _DirectoryRow(
-                        entry: _entries[index],
-                        total: total,
-                      ),
+                      itemBuilder: (context, index) {
+                        final entry = _entries[index];
+
+                        return _DirectoryRow(
+                          entry: entry,
+                          total: total,
+                          // Only a folder can be gone into; the loose files
+                          // are already as far in as they go.
+                          onOpen: _busy || entry.isLooseFiles
+                              ? null
+                              : () => _analyzePath(entry.path),
+                        );
+                      },
                     ),
                   ),
           ),
@@ -137,11 +164,69 @@ class _AnalyzePageState extends State<AnalyzePage> {
   }
 }
 
+/// The folder path as a row of steps, each one a way back to it.
+class _Breadcrumbs extends StatelessWidget {
+  const _Breadcrumbs({required this.path, required this.onSelected});
+
+  final String path;
+  final ValueChanged<String>? onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final crumbs = pathCrumbs(path);
+
+    return SizedBox(
+      height: 32,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: crumbs.length,
+        itemBuilder: (context, index) {
+          final (label, target) = crumbs[index];
+          final last = index == crumbs.length - 1;
+
+          return Row(
+            children: [
+              if (index > 0)
+                Icon(
+                  Icons.chevron_right,
+                  size: 16,
+                  color: scheme.outline,
+                ),
+              TextButton(
+                onPressed: last ? null : () => onSelected?.call(target),
+                style: TextButton.styleFrom(
+                  minimumSize: Size.zero,
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  disabledForegroundColor: scheme.onSurface,
+                ),
+                child: Text(
+                  label,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: last ? FontWeight.w600 : FontWeight.w400,
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
+
 class _DirectoryRow extends StatelessWidget {
-  const _DirectoryRow({required this.entry, required this.total});
+  const _DirectoryRow({
+    required this.entry,
+    required this.total,
+    required this.onOpen,
+  });
 
   final DirectoryEntry entry;
   final int total;
+  final VoidCallback? onOpen;
 
   @override
   Widget build(BuildContext context) {
@@ -151,67 +236,78 @@ class _DirectoryRow extends StatelessWidget {
     final scheme = theme.colorScheme;
     final share = total > 0 ? entry.size * 100 / total : 0.0;
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: Row(
-        children: [
-          Expanded(
-            flex: 4,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  entry.name,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.bodyLarge
-                      ?.copyWith(fontWeight: FontWeight.w500),
-                ),
-                Text(
-                  tf('status.scanned', [formatCount(entry.fileCount)]),
-                  style: theme.textTheme.bodySmall
-                      ?.copyWith(color: scheme.onSurfaceVariant),
-                ),
-              ],
+    return InkWell(
+      onTap: onOpen,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Row(
+          children: [
+            Icon(
+              entry.isLooseFiles
+                  ? Icons.description_outlined
+                  : Icons.folder_outlined,
+              size: 18,
+              color: scheme.onSurfaceVariant,
             ),
-          ),
-          const SizedBox(width: 16),
-          SizedBox(
-            width: 90,
-            child: Text(
-              formatSize(entry.size),
-              textAlign: TextAlign.right,
-              style: theme.textTheme.bodyLarge
-                  ?.copyWith(fontWeight: FontWeight.w600),
-            ),
-          ),
-          const SizedBox(width: 20),
-          Expanded(
-            flex: 3,
-            child: Row(
-              children: [
-                Expanded(
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(4),
-                    child: LinearProgressIndicator(
-                      value: share / 100,
-                      minHeight: 6,
-                    ),
+            const SizedBox(width: 12),
+            Expanded(
+              flex: 4,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    entry.isLooseFiles ? t('analyze.loose') : entry.name,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodyLarge
+                        ?.copyWith(fontWeight: FontWeight.w500),
                   ),
-                ),
-                const SizedBox(width: 10),
-                SizedBox(
-                  width: 42,
-                  child: Text(
-                    '${share.toStringAsFixed(1)}%',
-                    textAlign: TextAlign.right,
+                  Text(
+                    tf('status.scanned', [formatCount(entry.fileCount)]),
                     style: theme.textTheme.bodySmall
                         ?.copyWith(color: scheme.onSurfaceVariant),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
+            const SizedBox(width: 16),
+            SizedBox(
+              width: 90,
+              child: Text(
+                formatSize(entry.size),
+                textAlign: TextAlign.right,
+                style: theme.textTheme.bodyLarge
+                    ?.copyWith(fontWeight: FontWeight.w600),
+              ),
+            ),
+            const SizedBox(width: 20),
+            Expanded(
+              flex: 3,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(4),
+                      child: LinearProgressIndicator(
+                        value: share / 100,
+                        minHeight: 6,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  SizedBox(
+                    width: 42,
+                    child: Text(
+                      '${share.toStringAsFixed(1)}%',
+                      textAlign: TextAlign.right,
+                      style: theme.textTheme.bodySmall
+                          ?.copyWith(color: scheme.onSurfaceVariant),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

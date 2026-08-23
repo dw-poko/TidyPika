@@ -4,6 +4,12 @@
 
 ### Added
 
+- **Disk Analysis goes in.** A folder in the results opens it, and the path
+  above turns into steps that go back — so following the space down a tree no
+  longer means retyping the path at every level. The analysis also counts the
+  files lying directly in the folder rather than only its sub-folders; without
+  that the total was smaller than the folder, and every step further in lost
+  whatever was left behind at the last one.
 - **A dashboard worth opening.** Four figures across the top of the home page,
   all of them read instantly and all of them pointing at something to do: what
   is sitting in the Recycle Bin, with a button to empty it; what Windows has

@@ -299,6 +299,31 @@ List<DirectoryEntry> analyzeDirectory(
   final entries = <DirectoryEntry>[];
   var seen = 0;
 
+  // The files directly inside, before the sub-folders: they belong to this
+  // folder as much as any sub-folder does, and leaving them out makes the
+  // total smaller than the folder.
+  var looseSize = 0;
+  var looseCount = 0;
+  for (final path in listFilesShallow(root)) {
+    final size = fileSize(path);
+    if (size == null) continue;
+
+    looseSize += size;
+    looseCount++;
+  }
+
+  if (looseCount > 0) {
+    entries.add(
+      DirectoryEntry(
+        path: root,
+        name: root,
+        size: looseSize,
+        fileCount: looseCount,
+        isLooseFiles: true,
+      ),
+    );
+  }
+
   for (var i = 0; i < children.length; i++) {
     final dir = children[i];
     onProgress?.call(
