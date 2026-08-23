@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../core/disk_scanner.dart';
 import '../core/hibernation.dart';
 import '../core/pagefile.dart';
 import '../core/size_formatter.dart';
