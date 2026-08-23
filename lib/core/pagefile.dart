@@ -64,20 +64,7 @@ PagefileInfo readPagefile() {
     'PagingFiles',
   );
 
-  final entries = <PagefileEntry>[];
-  for (final line in configured ?? const <String>[]) {
-    final parts = line.split(RegExp(r'\s+'))
-      ..removeWhere((part) => part.isEmpty);
-    if (parts.isEmpty) continue;
-
-    entries.add(
-      PagefileEntry(
-        path: parts[0],
-        initialMb: parts.length > 1 ? int.tryParse(parts[1]) : null,
-        maximumMb: parts.length > 2 ? int.tryParse(parts[2]) : null,
-      ),
-    );
-  }
+  final entries = parsePagefileEntries(configured);
 
   // Sizes come off the disk rather than out of the setting: a range says what
   // the file may become, not what it is now.
@@ -94,7 +81,7 @@ PagefileInfo readPagefile() {
   }
 
   return PagefileInfo(
-    mode: _modeFor(configured, entries),
+    mode: pagefileModeFor(configured, entries),
     entries: entries,
     files: files,
     totalSize: total,
@@ -109,7 +96,36 @@ List<String> _driveRoots() {
   }
 }
 
-PagefileMode _modeFor(List<String>? configured, List<PagefileEntry> entries) {
+/// Reads the lines of the `PagingFiles` setting, each `path [initial max]`.
+///
+/// Kept apart from the registry so what the strings mean can be checked
+/// without a machine to read them off.
+List<PagefileEntry> parsePagefileEntries(List<String>? configured) {
+  final entries = <PagefileEntry>[];
+
+  for (final line in configured ?? const <String>[]) {
+    final parts = line.split(RegExp(r'\s+'))
+      ..removeWhere((part) => part.isEmpty);
+    if (parts.isEmpty) continue;
+
+    entries.add(
+      PagefileEntry(
+        path: parts[0],
+        initialMb: parts.length > 1 ? int.tryParse(parts[1]) : null,
+        maximumMb: parts.length > 2 ? int.tryParse(parts[2]) : null,
+      ),
+    );
+  }
+
+  return entries;
+}
+
+/// A missing setting is not an empty one: the first cannot be read, the second
+/// says there is no paging file.
+PagefileMode pagefileModeFor(
+  List<String>? configured,
+  List<PagefileEntry> entries,
+) {
   if (configured == null) return PagefileMode.unknown;
   if (entries.isEmpty) return PagefileMode.none;
   if (entries.any((entry) => entry.isAutomatic)) return PagefileMode.automatic;

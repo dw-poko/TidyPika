@@ -62,6 +62,15 @@ jobs:
       - name: Restore packages
         run: flutter pub get
 
+      # Before the build, because the build only reports what stops it. An
+      # import that no longer resolves is caught here in a second rather than
+      # two minutes into MSBuild.
+      - name: Analyze
+        run: flutter analyze
+
+      - name: Test
+        run: flutter test
+
       - name: Build
         run: flutter build windows --release
 

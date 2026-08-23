@@ -58,7 +58,7 @@ HibernationInfo readHibernation() {
 
   return HibernationInfo(
     path: path,
-    state: _stateFrom(_hibernateEnabled(), size),
+    state: hibernationStateFrom(_hibernateEnabled(), size),
     size: size,
   );
 }
@@ -67,7 +67,7 @@ HibernationInfo readHibernation() {
 /// feature is on — but a file that is not there proves nothing, since a read
 /// that failed and a file that is absent look the same from here. That case
 /// is reported as unknown rather than guessed at as off.
-HibernationState _stateFrom(bool? setting, int? size) {
+HibernationState hibernationStateFrom(bool? setting, int? size) {
   if (setting != null) {
     return setting ? HibernationState.on : HibernationState.off;
   }

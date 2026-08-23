@@ -32,6 +32,13 @@
 
 ### Changed
 
+- **CI analyses and tests before it builds.** `flutter analyze` catches in a
+  second what the build only reports two minutes into MSBuild, and there is
+  now a test suite for the pure functions that decide what gets deleted: the
+  guard on protected files, the pattern matching behind each clean target,
+  size and count formatting, the `PagingFiles` parser, and the rules that
+  decide whether hibernation is on, off, or unreadable. Every bug this release
+  fixes was in one of those.
 - **Duplicates copes with large groups.** A group used to be one card with its
   files in a column, and a column builds everything it holds — so a group with
   a few thousand copies cost a few thousand widgets on every rebuild, and a

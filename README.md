@@ -161,6 +161,7 @@ lib/
                                #   Reclaim, Analyze
 tools/
 └── launcher.cs                # Single-file wrapper with the build embedded
+test/                          # The pure functions that decide what gets deleted
 ```
 
 **Scanning off the UI thread.** Every scan runs on its own isolate, streaming
