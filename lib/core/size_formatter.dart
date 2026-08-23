@@ -29,3 +29,14 @@ String formatCount(int value) {
 
   return value < 0 ? '-$buffer' : buffer.toString();
 }
+
+/// Elapsed time split for display: whole minutes, and the seconds left over.
+///
+/// Under a minute the seconds keep their fraction, because the difference
+/// between half a second and four is the whole of what a short scan has to
+/// say. Past a minute the fraction stops meaning anything.
+(int, double) elapsedParts(Duration elapsed) {
+  final minutes = elapsed.inMinutes;
+
+  return (minutes, elapsed.inMilliseconds / 1000 - minutes * 60);
+}

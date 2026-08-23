@@ -4,6 +4,9 @@
 
 ### Added
 
+- **Scans say how long they took.** The status strip counts while one runs and
+  keeps the total once it stops, cancelled or finished, on every page that
+  scans.
 - **Quick Clean covers nineteen places, not eleven.** Delivery Optimization,
   Windows error reports, GPU shader caches, and the Teams, Discord, Slack and
   VS Code caches. Firefox joins Chrome and Edge — and all three now cover every

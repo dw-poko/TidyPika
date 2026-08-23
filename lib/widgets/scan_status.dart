@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../core/models.dart';
@@ -9,9 +11,33 @@ class ScanMonitor extends ChangeNotifier {
   ScanProgress? progress;
   bool running = false;
 
+  DateTime? _startedAt;
+  Duration? _took;
+  Timer? _ticker;
+
+  /// Time on the clock: counting while a scan runs, and the total once it
+  /// stops. Null before anything has been started.
+  Duration? get elapsed {
+    if (_took != null) return _took;
+
+    final started = _startedAt;
+    return started == null ? null : DateTime.now().difference(started);
+  }
+
   void start() {
     progress = null;
     running = true;
+    _startedAt = DateTime.now();
+    _took = null;
+
+    // Progress arrives in bursts and a slow directory can go quiet for
+    // seconds, so the clock has to move on its own or it reads as stopped.
+    _ticker?.cancel();
+    _ticker = Timer.periodic(
+      const Duration(milliseconds: 100),
+      (_) => notifyListeners(),
+    );
+
     notifyListeners();
   }
 
@@ -20,9 +46,23 @@ class ScanMonitor extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Called when a scan ends, whether it finished or was cancelled. Either way
+  /// the time it took is the time it ran.
   void finish() {
+    _ticker?.cancel();
+    _ticker = null;
+
+    final started = _startedAt;
+    if (started != null) _took = DateTime.now().difference(started);
+
     running = false;
     notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _ticker?.cancel();
+    super.dispose();
   }
 }
 
@@ -64,6 +104,14 @@ class ScanStatusPanel extends StatelessWidget {
                         style: theme.textTheme.bodyMedium,
                       ),
                     ),
+                    if (monitor.elapsed case final elapsed?) ...[
+                      const SizedBox(width: 12),
+                      Text(
+                        _elapsedText(elapsed),
+                        style: theme.textTheme.bodySmall
+                            ?.copyWith(color: scheme.onSurfaceVariant),
+                      ),
+                    ],
                     if (progress != null && progress.processed > 0) ...[
                       const SizedBox(width: 12),
                       Text(
@@ -106,4 +154,14 @@ class ScanStatusPanel extends StatelessWidget {
       },
     );
   }
+}
+
+/// Seconds while a scan is short enough for them to matter, minutes once it
+/// is not.
+String _elapsedText(Duration elapsed) {
+  final (minutes, seconds) = elapsedParts(elapsed);
+
+  return minutes == 0
+      ? tf('time.seconds', [seconds.toStringAsFixed(1)])
+      : tf('time.minutes', [minutes, seconds.toStringAsFixed(0)]);
 }

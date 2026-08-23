@@ -294,6 +294,8 @@ const Map<String, String> _en = {
   'stage.deleting': 'Deleting',
   'stage.done': 'Done',
   'status.scanned': '{0} files',
+  'time.seconds': '{0}s',
+  'time.minutes': '{0}m {1}s',
 
   'common.browse': 'Browse',
   'common.cancel': 'Cancel',
@@ -512,6 +514,8 @@ const Map<String, String> _ko = {
   'stage.deleting': '삭제 중',
   'stage.done': '완료',
   'status.scanned': '파일 {0}개',
+  'time.seconds': '{0}초',
+  'time.minutes': '{0}분 {1}초',
 
   'common.browse': '찾아보기',
   'common.cancel': '취소',
@@ -730,6 +734,8 @@ const Map<String, String> _ja = {
   'stage.deleting': '削除中',
   'stage.done': '完了',
   'status.scanned': '{0} 件',
+  'time.seconds': '{0} 秒',
+  'time.minutes': '{0} 分 {1} 秒',
 
   'common.browse': '参照',
   'common.cancel': 'キャンセル',
@@ -938,6 +944,8 @@ const Map<String, String> _zh = {
   'stage.deleting': '删除中',
   'stage.done': '完成',
   'status.scanned': '{0} 个文件',
+  'time.seconds': '{0} 秒',
+  'time.minutes': '{0} 分 {1} 秒',
 
   'common.browse': '浏览',
   'common.cancel': '取消',
