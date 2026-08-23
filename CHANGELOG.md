@@ -4,6 +4,15 @@
 
 ### Added
 
+- **A dashboard worth opening.** Four figures across the top of the home page,
+  all of them read instantly and all of them pointing at something to do: what
+  is sitting in the Recycle Bin, with a button to empty it; what Windows has
+  reserved for the hibernation and paging files, which opens Reclaim Space;
+  how the system drive's free space has moved over the last seven days; and
+  what the last clean recovered. The last two come from a small file of daily
+  samples the app keeps for itself.
+- **The mascot is the icon.** The executable, its window and the navigation
+  rail now wear it, cut out of the artwork the README already used.
 - **A Reclaim Space page.** The two settings that reserve space whether or not
   it is used — the hibernation file and the paging file — have their own place
   in the navigation rail rather than sitting on the dashboard, which is for

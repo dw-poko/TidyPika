@@ -73,6 +73,22 @@ class TidyPikaApp extends StatelessWidget {
   }
 }
 
+/// Which page the rail is showing.
+///
+/// Held outside the shell so a card on one page can send the reader to
+/// another — the dashboard summarises what Reclaim Space controls, and saying
+/// so is only useful if it can also take you there.
+final ValueNotifier<int> selectedPage = ValueNotifier<int>(0);
+
+abstract final class Pages {
+  static const int home = 0;
+  static const int quickClean = 1;
+  static const int largeFiles = 2;
+  static const int duplicates = 3;
+  static const int reclaim = 4;
+  static const int analyze = 5;
+}
+
 class AppShell extends StatefulWidget {
   const AppShell({super.key});
 
@@ -81,7 +97,6 @@ class AppShell extends StatefulWidget {
 }
 
 class _AppShellState extends State<AppShell> {
-  int _index = 0;
 
   // Kept alive in an IndexedStack so scan results survive switching pages.
   static const List<Widget> _pages = [
@@ -110,18 +125,24 @@ class _AppShellState extends State<AppShell> {
   Widget build(BuildContext context) {
     LanguageScope.watch(context);
 
-    final scheme = Theme.of(context).colorScheme;
     final extended = MediaQuery.sizeOf(context).width >= 1000;
 
+    return ListenableBuilder(
+      listenable: selectedPage,
+      builder: (context, _) => _shell(context, extended),
+    );
+  }
+
+  Widget _shell(BuildContext context, bool extended) {
     return Scaffold(
       body: Row(
         children: [
           NavigationRail(
             extended: extended,
             minExtendedWidth: 210,
-            selectedIndex: _index,
-            onDestinationSelected: (value) => setState(() => _index = value),
-            leading: _Leading(extended: extended, color: scheme.primary),
+            selectedIndex: selectedPage.value,
+            onDestinationSelected: (value) => selectedPage.value = value,
+            leading: _Leading(extended: extended),
             trailing: Expanded(
               child: Align(
                 alignment: Alignment.bottomCenter,
@@ -165,7 +186,9 @@ class _AppShellState extends State<AppShell> {
             ],
           ),
           const VerticalDivider(width: 1, thickness: 1),
-          Expanded(child: IndexedStack(index: _index, children: _pages)),
+          Expanded(
+            child: IndexedStack(index: selectedPage.value, children: _pages),
+          ),
         ],
       ),
     );
@@ -173,10 +196,9 @@ class _AppShellState extends State<AppShell> {
 }
 
 class _Leading extends StatelessWidget {
-  const _Leading({required this.extended, required this.color});
+  const _Leading({required this.extended});
 
   final bool extended;
-  final Color color;
 
   @override
   Widget build(BuildContext context) {
@@ -188,7 +210,12 @@ class _Leading extends StatelessWidget {
           mainAxisAlignment:
               extended ? MainAxisAlignment.start : MainAxisAlignment.center,
           children: [
-            Icon(Icons.auto_awesome, color: color),
+            Image.asset(
+              'assets/logo.png',
+              width: 28,
+              height: 28,
+              filterQuality: FilterQuality.medium,
+            ),
             if (extended) ...[
               const SizedBox(width: 10),
               Expanded(

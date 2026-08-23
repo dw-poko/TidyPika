@@ -21,3 +21,7 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets:
+    # Only the logo is bundled. mascot.png is the README's, and app_icon.ico is
+    # the executable's — neither belongs inside the app.
+    - assets/logo.png

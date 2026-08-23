@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:path/path.dart' as p;
 
+import 'disk_scanner.dart';
 import 'win32.dart';
 
 /// The hibernation file and what it costs.
@@ -33,16 +34,7 @@ class HibernationInfo {
   bool get enabled => state == HibernationState.on;
 }
 
-String hibernationFile() {
-  // SystemDrive is written as `C:`, but strip a trailing separator anyway
-  // rather than depend on that and produce `C:\\hiberfil.sys`.
-  final drive = (Platform.environment['SystemDrive'] ?? 'C:').replaceAll(
-    r'\',
-    '',
-  );
-
-  return '$drive\\hiberfil.sys';
-}
+String hibernationFile() => '${systemDriveRoot()}hiberfil.sys';
 
 /// Whether Windows has the feature switched on, straight from the setting
 /// rather than inferred.

@@ -49,6 +49,10 @@ jobs:
             'set(BINARY_NAME "tidypika")',
             'set(BINARY_NAME "TidyPika")') | Set-Content $cmake
 
+          # The scaffold ships Flutter's own icon; the app has its own.
+          Copy-Item assets/app_icon.ico `
+            -Destination 'windows/runner/resources/app_icon.ico' -Force
+
           $runner = 'windows/runner/main.cpp'
           (Get-Content $runner -Raw).Replace(
             'L"tidypika"', 'L"TidyPika"').Replace(

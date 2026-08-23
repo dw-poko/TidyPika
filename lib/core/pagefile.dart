@@ -57,15 +57,6 @@ class PagefileInfo {
 const String _memoryManagement =
     r'SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management';
 
-String systemDriveRoot() {
-  final drive = (Platform.environment['SystemDrive'] ?? 'C:').replaceAll(
-    r'\',
-    '',
-  );
-
-  return '$drive\\';
-}
-
 PagefileInfo readPagefile() {
   final configured = registryMultiSz(
     hkeyLocalMachine,

@@ -43,6 +43,7 @@ download that unpacks to 27 MB.
 | **Large Files** | Finds the biggest files under any folder, above a size you choose |
 | **Duplicates** | Byte-identical files, confirmed by SHA-256 content hash |
 | **Disk Analysis** | Which sub-folders are using the space, with share-of-total bars |
+| **Dashboard** | Recycle Bin, space Windows reserves, the week's trend, the last clean |
 | **Drive Overview** | Free and used space across every attached drive |
 | **Reclaim Space** | What `hiberfil.sys` and `pagefile.sys` cost, and the settings behind them |
 | **Live progress** | Stage, running file count and a real percentage |
@@ -150,6 +151,7 @@ lib/
 │   ├── cleaner.dart           # Recycle Bin / permanent deletion + guards
 │   ├── disk_scanner.dart      # Drive enumeration
 │   ├── hibernation.dart       # hiberfil.sys size, powercfg on/off
+│   ├── history.dart           # Free-space samples and the last clean
 │   ├── pagefile.dart          # pagefile.sys size, PagingFiles, WMI changes
 │   ├── win32.dart             # Hand-rolled FFI bindings
 │   └── tasks.dart             # Isolate plumbing and progress streaming
@@ -207,6 +209,7 @@ TidyPika는 디스크를 잡아먹는 것들 — 임시 파일, 브라우저 캐
 | **대용량 파일** | 지정한 폴더에서 정해둔 크기 이상인 파일을 큰 순서로 |
 | **중복 파일** | SHA-256 내용 해시로 확인한, 바이트 단위로 동일한 파일 |
 | **디스크 분석** | 어떤 하위 폴더가 공간을 쓰는지, 전체 대비 비중 막대와 함께 |
+| **대시보드** | 휴지통, 시스템 예약 공간, 주간 변화, 마지막 정리 |
 | **드라이브 현황** | 연결된 모든 드라이브의 여유·사용 공간 |
 | **용량 줄이기** | `hiberfil.sys`·`pagefile.sys`가 차지하는 용량과, 그 뒤의 설정 |
 | **실시간 진행률** | 단계, 누적 파일 수, 실제 퍼센트 |

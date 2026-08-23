@@ -1,9 +1,22 @@
 import 'dart:ffi';
+import 'dart:io';
 
 import 'package:ffi/ffi.dart';
 
 import 'models.dart';
 import 'win32.dart';
+
+/// The drive Windows is installed on, as a root path such as `C:\`.
+String systemDriveRoot() {
+  // SystemDrive is written as `C:`, but strip a trailing separator anyway
+  // rather than depend on that and produce a doubled one.
+  final drive = (Platform.environment['SystemDrive'] ?? 'C:').replaceAll(
+    r'\',
+    '',
+  );
+
+  return '$drive\\';
+}
 
 List<DiskInfo> getDisks() {
   final disks = <DiskInfo>[];

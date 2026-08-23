@@ -169,6 +169,68 @@ int? fileSizeFromDirectory(String path) {
   }
 }
 
+/// `SHQUERYRBINFO`: a size field the caller fills in, then the two totals.
+final class RecycleBinInfo extends Struct {
+  @Uint32()
+  external int cbSize;
+
+  @Int64()
+  external int bytes;
+
+  @Int64()
+  external int items;
+}
+
+final int Function(Pointer<Utf16>, Pointer<Void>) shQueryRecycleBin =
+    _shell32.lookupFunction<Int32 Function(Pointer<Utf16>, Pointer<Void>),
+        int Function(Pointer<Utf16>, Pointer<Void>)>('SHQueryRecycleBinW');
+
+final int Function(Pointer<Void>, Pointer<Utf16>, int) shEmptyRecycleBin =
+    _shell32.lookupFunction<
+        Int32 Function(Pointer<Void>, Pointer<Utf16>, Uint32),
+        int Function(Pointer<Void>, Pointer<Utf16>, int)>(
+  'SHEmptyRecycleBinW',
+);
+
+const int sherbNoConfirmation = 0x00000001;
+const int sherbNoProgressUi = 0x00000002;
+const int sherbNoSound = 0x00000004;
+
+/// Everything in the Recycle Bin, across every drive, as (bytes, items).
+///
+/// Null means the query failed. A null path asks about all drives at once,
+/// which is both what the dashboard wants and one call instead of one per
+/// drive.
+(int, int)? readRecycleBin() {
+  final info = calloc<RecycleBinInfo>();
+  info.ref.cbSize = sizeOf<RecycleBinInfo>();
+
+  try {
+    if (shQueryRecycleBin(nullptr, info.cast<Void>()) != 0) return null;
+
+    return (info.ref.bytes, info.ref.items);
+  } catch (_) {
+    return null;
+  } finally {
+    calloc.free(info);
+  }
+}
+
+/// Empties every drive's bin. The caller has already confirmed, so the shell
+/// is told not to ask again, and told to keep quiet while it works.
+bool emptyRecycleBin() {
+  try {
+    return shEmptyRecycleBin(
+          nullptr,
+          nullptr,
+          sherbNoConfirmation | sherbNoProgressUi | sherbNoSound,
+        ) ==
+        0;
+  } catch (_) {
+    return false;
+  }
+}
+
 /// `HKEY_LOCAL_MACHINE`. The predefined keys are negative 32-bit constants
 /// widened to pointer size, so the sign extension matters on x64.
 const int hkeyLocalMachine = -2147483646;
