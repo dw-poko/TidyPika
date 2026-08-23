@@ -86,7 +86,8 @@ the source in this repository.
 
 Every push to `main` also publishes both as
 [build artifacts](../../actions), which is where to look for a change that has
-not been tagged yet.
+not been tagged yet. [CHANGELOG.md](CHANGELOG.md) records what each release
+changed.
 
 Windows 10 1809 or newer, x64. The app expects the Microsoft Visual C++
 runtime, which almost every Windows install already has.
@@ -230,7 +231,8 @@ Defender가 단일 파일을 `Trojan:Win32/Wacatac.B!ml`로 잡기도 합니다.
 
 `main`에 푸시할 때마다 동일한 두 파일이
 [빌드 아티팩트](../../actions)로도 올라갑니다. 아직 태그되지 않은 변경사항은
-여기서 받으세요.
+여기서 받으세요. 릴리스별 변경 내역은 [CHANGELOG.md](CHANGELOG.md)에
+있습니다.
 
 Windows 10 1809 이상, x64. Microsoft Visual C++ 런타임이 필요한데, 거의 모든
 Windows에 이미 설치되어 있습니다.

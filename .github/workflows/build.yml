@@ -159,12 +159,29 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ inputs.release }}
         run: |
+          $tag = if ($env:RELEASE_TAG) { $env:RELEASE_TAG } else { $env:GITHUB_REF_NAME }
+          Write-Host "publishing $tag at $env:GITHUB_SHA"
+
+          # CHANGELOG.md is the one place release notes are written, so the
+          # heading format is load-bearing: one '## vX.Y.Z' per release. Take
+          # this tag's section and stop at the next heading.
+          $lines = Get-Content CHANGELOG.md -Encoding utf8
+          $start = -1
+          for ($i = 0; $i -lt $lines.Count; $i++) {
+            if ($lines[$i].Trim() -eq "## $tag") { $start = $i + 1; break }
+          }
+          if ($start -lt 0) { throw "CHANGELOG.md has no '## $tag' section" }
+
+          $body = New-Object System.Collections.Generic.List[string]
+          for ($i = $start; $i -lt $lines.Count; $i++) {
+            if ($lines[$i] -match '^## v') { break }
+            $body.Add($lines[$i])
+          }
+
           # Built as an array rather than a here-string: a here-string
           # terminator has to sit at column zero, which YAML block indentation
           # makes easy to get wrong.
-          $notes = @(
-            'First tagged build.',
-            '',
+          $downloads = @(
             '### Downloads',
             '',
             '- `TidyPika.exe`: one file, nothing to unpack or install.',
@@ -181,22 +198,11 @@ jobs:
             'match against known malware. The folder build is the same app if',
             'either gets in the way.',
             '',
-            'Requires Windows 10 1809 or newer, x64.',
-            '',
-            '### What it does',
-            '',
-            '- Quick Clean across eleven cache and temp locations',
-            '- Large file finder, above a size you choose',
-            '- Duplicate detection confirmed by SHA-256 content hash',
-            '- Per-folder disk analysis',
-            '- Deletion to the Recycle Bin by default, system binaries excluded',
-            '- English, Korean, Japanese and Simplified Chinese,',
-            '  switchable without a restart'
-          ) -join "`n"
-          Set-Content -Path release-notes.md -Value $notes -Encoding utf8
+            'Requires Windows 10 1809 or newer, x64.'
+          )
 
-          $tag = if ($env:RELEASE_TAG) { $env:RELEASE_TAG } else { $env:GITHUB_REF_NAME }
-          Write-Host "publishing $tag at $env:GITHUB_SHA"
+          $notes = ($body -join "`n").Trim() + "`n`n" + ($downloads -join "`n")
+          Set-Content -Path release-notes.md -Value $notes -Encoding utf8
 
           gh release create $tag `
             TidyPika.exe `
