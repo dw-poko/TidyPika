@@ -217,10 +217,27 @@ jobs:
           $notes = ($body -join "`n").Trim() + "`n`n" + ($downloads -join "`n")
           Set-Content -Path release-notes.md -Value $notes -Encoding utf8
 
-          gh release create $tag `
-            TidyPika.exe `
-            TidyPika-win-x64.zip `
-            --target $env:GITHUB_SHA `
-            --title "TidyPika $tag" `
-            --notes-file release-notes.md
-          if ($LASTEXITCODE -ne 0) { throw 'the release could not be created' }
+          # Re-running for a tag that is already out updates its notes rather
+          # than failing. The assets are left alone: they are what people have
+          # already downloaded, and a rebuild of the same commit does not
+          # produce the same bytes.
+          gh release view $tag > $null 2>&1
+          $exists = $LASTEXITCODE -eq 0
+          $global:LASTEXITCODE = 0
+
+          if ($exists) {
+            Write-Host "$tag is already published; updating its notes"
+
+            gh release edit $tag `
+              --title "TidyPika $tag" `
+              --notes-file release-notes.md
+            if ($LASTEXITCODE -ne 0) { throw 'the notes could not be updated' }
+          } else {
+            gh release create $tag `
+              TidyPika.exe `
+              TidyPika-win-x64.zip `
+              --target $env:GITHUB_SHA `
+              --title "TidyPika $tag" `
+              --notes-file release-notes.md
+            if ($LASTEXITCODE -ne 0) { throw 'the release could not be created' }
+          }
