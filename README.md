@@ -40,12 +40,13 @@ download that unpacks to 27 MB.
 | Feature | Description |
 |---------|-------------|
 | **Quick Clean** | Scans nineteen known cache and temp locations, cleans the ones you pick |
-| **Large Files** | Finds the biggest files under any folder, above a size you choose |
+| **Large Files** | The biggest files under any folder, filtered by size and by how long since they changed |
 | **Duplicates** | Byte-identical files, confirmed by SHA-256 content hash |
-| **Disk Analysis** | Which folders are using the space; click one to go in, breadcrumbs to come back |
+| **Disk Analysis** | Which folders are using the space, as a list or a treemap; click one to go in |
 | **Dashboard** | Recycle Bin, space Windows reserves, the week's trend, the last clean |
 | **Drive Overview** | Free and used space across every attached drive |
-| **Reclaim Space** | What `hiberfil.sys` and `pagefile.sys` cost, and the settings behind them |
+| **Reclaim Space** | What `hiberfil.sys`, `pagefile.sys` and WinSxS cost, and the settings behind them |
+| **Excluded folders** | Folders every scan leaves alone, set once from the rail |
 | **Live progress** | Stage, running file count and a real percentage |
 | **Cancel anytime** | Scans run on their own isolate and stop the moment you ask |
 | **Safe deletion** | Recycle Bin by default; system binaries are never touched |
@@ -155,6 +156,9 @@ lib/
 │   ├── hibernation.dart       # hiberfil.sys size, powercfg on/off
 │   ├── history.dart           # Free-space samples and the last clean
 │   ├── paths.dart             # A path as the steps that reach it
+│   ├── treemap.dart           # Squarified layout, weights to rectangles
+│   ├── exclusions.dart        # Folders every scan leaves alone
+│   ├── component_store.dart   # WinSxS, read and cleaned through DISM
 │   ├── storage_events.dart    # Said when the app changes the disk
 │   ├── pagefile.dart          # pagefile.sys size, PagingFiles, WMI changes
 │   ├── win32.dart             # Hand-rolled FFI bindings
@@ -211,12 +215,13 @@ TidyPika는 디스크를 잡아먹는 것들 — 임시 파일, 브라우저 캐
 | 기능 | 설명 |
 |------|------|
 | **빠른 정리** | 알려진 캐시·임시 폴더 19곳을 검사하고, 고른 항목만 삭제 |
-| **대용량 파일** | 지정한 폴더에서 정해둔 크기 이상인 파일을 큰 순서로 |
+| **대용량 파일** | 지정한 폴더에서 크기와 마지막 수정 시점으로 걸러낸 파일 |
 | **중복 파일** | SHA-256 내용 해시로 확인한, 바이트 단위로 동일한 파일 |
-| **디스크 분석** | 어떤 폴더가 공간을 쓰는지. 눌러서 들어가고, 경로 표시로 되돌아오기 |
+| **디스크 분석** | 어떤 폴더가 공간을 쓰는지 목록 또는 트리맵으로. 눌러서 들어가기 |
 | **대시보드** | 휴지통, 시스템 예약 공간, 주간 변화, 마지막 정리 |
 | **드라이브 현황** | 연결된 모든 드라이브의 여유·사용 공간 |
-| **용량 줄이기** | `hiberfil.sys`·`pagefile.sys`가 차지하는 용량과, 그 뒤의 설정 |
+| **용량 줄이기** | `hiberfil.sys`·`pagefile.sys`·WinSxS가 차지하는 용량과, 그 뒤의 설정 |
+| **제외할 폴더** | 모든 검사가 건너뛸 폴더. 레일에서 한 번만 지정 |
 | **실시간 진행률** | 단계, 누적 파일 수, 실제 퍼센트 |
 | **언제든 취소** | 검사는 별도 isolate에서 돌아서 누르는 즉시 멈춤 |
 | **안전한 삭제** | 기본은 휴지통, 시스템 바이너리는 건드리지 않음 |

@@ -1,5 +1,38 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- **Disk Analysis can be drawn as a map.** Folders as rectangles, area in
+  proportion to size, so it is obvious at a glance whether the biggest one is
+  half of what is here or a twentieth of it. Tiles open the folder they stand
+  for, the same as rows do.
+- **The Windows component store on Reclaim Space.** WinSxS is built from hard
+  links — the same bytes counted twice by anything that adds up folder sizes,
+  Explorer included — so the figures come from DISM, which counts them once.
+  It shows what Explorer would claim against what is really there, how much is
+  shared with Windows, and what a cleanup would recover, and it can run that
+  cleanup.
+- **Excluded folders.** A list of folders every scan leaves alone, set once
+  from the navigation rail. A game install, a backup whose duplicates are the
+  point, footage still being worked on — all of it looks like waste to a
+  scanner otherwise.
+- **Large Files can filter by age.** Not just the biggest files but the big
+  ones nothing has changed in three months, six, a year or two.
+
+### Fixed
+
+- Folders deeper than 260 characters were skipped rather than scanned. A
+  node_modules nested far enough simply was not there, which is one of the
+  largest things a cleaner exists to find.
+- Sizes were the length a file claims rather than what it occupies. A
+  compressed or sparse file gives back less than its length says, and that is
+  the number this app is for. Duplicate detection still groups on length,
+  where the number is an identity rather than an amount.
+- A file too deep for the Recycle Bin is now reported as such instead of being
+  deleted outright when the Recycle Bin was what was asked for.
+
 ## v0.0.3
 
 ### Added
