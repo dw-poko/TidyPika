@@ -4,135 +4,62 @@
 
 ### Added
 
-- **The dashboard keeps up.** Cleaning on another page, emptying the Recycle
-  Bin, or turning hibernation off now refreshes the dashboard's figures. It is
-  kept alive behind the other pages rather than rebuilt when you return to it,
-  so until now it went on showing the free space it read at startup.
-- **Scans say how long they took.** The status strip counts while one runs and
-  keeps the total once it stops, cancelled or finished, on every page that
-  scans.
+- **A dashboard.** The home page opens with what is sitting in the Recycle Bin
+  and a button to empty it, what Windows has reserved for the hibernation and
+  paging files, how free space has moved over the last week, and what the last
+  clean recovered. It refreshes itself whenever the app removes something.
+- **Reclaim Space.** A page for the two files Windows sets aside whether you
+  use them or not. See what `hiberfil.sys` and `pagefile.sys` cost, turn
+  hibernation on or off, and set the paging file to automatic, a fixed range,
+  or none at all. Both need administrator rights.
+- **Disk Analysis goes into folders.** Click a folder to open it and use the
+  path above to come back, instead of retyping it at every level.
 - **Quick Clean covers nineteen places, not eleven.** Delivery Optimization,
   Windows error reports, GPU shader caches, and the Teams, Discord, Slack and
-  VS Code caches. Firefox joins Chrome and Edge — and all three now cover every
-  browser profile rather than only the default one, which had been quietly
-  missing the caches of anyone with a second profile.
-- **Duplicates says when it stopped early.** The walk gives up after a fixed
-  number of files so a very large tree cannot run away with memory, and until
-  now it gave up in silence — a partial result that looked complete. It now
-  says so above the results, and the limit went from a hundred thousand files
-  to four hundred thousand, which covers a user profile several times over.
-- **Disk Analysis goes in.** A folder in the results opens it, and the path
-  above turns into steps that go back — so following the space down a tree no
-  longer means retyping the path at every level. The analysis also counts the
-  files lying directly in the folder rather than only its sub-folders; without
-  that the total was smaller than the folder, and every step further in lost
-  whatever was left behind at the last one. That row opens too — the loose
-  files have nowhere to descend to, so they unfold in place, largest first.
-- **A dashboard worth opening.** Four figures across the top of the home page,
-  all of them read instantly and all of them pointing at something to do: what
-  is sitting in the Recycle Bin, with a button to empty it; what Windows has
-  reserved for the hibernation and paging files, which opens Reclaim Space;
-  how the system drive's free space has moved over the last seven days; and
-  what the last clean recovered. The last two come from a small file of daily
-  samples the app keeps for itself.
-- **The mascot is the icon.** The executable, its window and the navigation
-  rail now wear it, cut out of the artwork the README already used.
-- **A Reclaim Space page.** The two settings that reserve space whether or not
-  it is used — the hibernation file and the paging file — have their own place
-  in the navigation rail rather than sitting on the dashboard, which is for
-  looking rather than changing.
-- **Hibernation.** What `hiberfil.sys` is costing, and a switch that turns the
-  feature on or off through `powercfg`. Windows sizes the file from installed
-  memory and reserves it whether or not the machine ever hibernates, so it is
-  often several gigabytes doing nothing. Changing the setting needs
-  administrator rights, and Fast Startup uses the same file, so it turns off
-  along with it.
-- **Virtual memory.** What `pagefile.sys` occupies across drives, how Windows
-  is set to size it, and a dialog that hands the setting back to Windows, pins
-  it to a range on the system drive, or removes it. The change goes through
-  WMI, needs administrator rights, and takes effect at the next restart.
-  Removing the paging file altogether is the one setting here that can
-  destabilise a machine, and the dialog says so before you pick it.
+  VS Code caches. Firefox joins Chrome and Edge, and all three now cover every
+  browser profile rather than only the default one.
+- **Scans say how long they took.**
+- **The mascot is now the icon** on the executable, the window and the
+  navigation rail.
 
-### Changed
+### Fixed
 
-- **CI analyses and tests before it builds.** `flutter analyze` catches in a
-  second what the build only reports two minutes into MSBuild, and there is
-  now a test suite for the pure functions that decide what gets deleted: the
-  guard on protected files, the pattern matching behind each clean target,
-  size and count formatting, the `PagingFiles` parser, and the rules that
-  decide whether hibernation is on, off, or unreadable. Every bug this release
-  fixes was in one of those.
-- **Duplicates copes with large groups.** A group used to be one card with its
-  files in a column, and a column builds everything it holds — so a group with
-  a few thousand copies cost a few thousand widgets on every rebuild, and a
-  rebuild is every checkbox. Headers and files are now one flat list, so only
-  what is on screen is built however large a group gets. The selected total is
-  kept as it changes rather than recounted from every file on every rebuild.
-- Files of 4 KB or less are no longer hashed twice while scanning: the quick
-  hash already covers them whole, so the confirming pass reuses it. On a tree
-  full of small duplicates that is half the reading gone.
+- Duplicate search no longer crawls on groups holding thousands of copies, and
+  small files are no longer read twice, so scans finish sooner.
+- A duplicate scan that stopped at its limit used to say nothing, showing a
+  partial result as though it were the whole tree. It now says so, and the
+  limit rose from a hundred thousand files to four hundred thousand.
+- Disk Analysis totals were smaller than the folder they described, because
+  files lying directly in it were left out. They are counted now, and the row
+  standing for them opens to name them.
 
 ---
 
 ### 추가
 
-- **대시보드가 뒤처지지 않습니다.** 다른 페이지에서 정리하거나, 휴지통을 비우거나,
-  최대 절전 모드를 끄면 대시보드의 숫자가 갱신됩니다. 대시보드는 다른 페이지 뒤에
-  살아 있을 뿐 돌아올 때 다시 만들어지지 않기 때문에, 지금까지는 시작할 때 읽은
-  여유 공간을 계속 보여주고 있었습니다.
-- **검사에 걸린 시간을 표시합니다.** 진행 표시줄이 검사 중에는 시간을 세고, 끝나거나
-  취소되면 그 총 시간을 남깁니다. 검사하는 모든 페이지에 적용됩니다.
-- **빠른 정리 대상이 11곳에서 19곳으로.** 배달 최적화, Windows 오류 보고, GPU 셰이더
-  캐시, Teams·Discord·Slack·VS Code 캐시가 추가됐습니다. Firefox가 Chrome·Edge와
-  나란히 들어왔고, 셋 다 기본 프로필만이 아니라 **모든 프로필**을 봅니다. 프로필이
-  둘 이상인 사람의 캐시를 그동안 통째로 놓치고 있었습니다.
-- **중복 파일이 도중에 멈췄다고 말합니다.** 아주 큰 트리에서 메모리가 무한정 늘지
-  않도록 일정 개수에서 검사를 멈추는데, 지금까지는 조용히 멈췄습니다 — 일부만 본
-  결과가 전부 본 것처럼 보였습니다. 이제 결과 위에 알리고, 한도도 10만 개에서 40만
-  개로 올렸습니다. 사용자 프로필 몇 개 분량입니다.
-- **디스크 분석이 폴더 안으로 들어갑니다.** 결과의 폴더를 누르면 그 안으로 들어가고,
-  위쪽 경로가 되돌아가는 단계 버튼이 됩니다. 트리를 따라 내려가려고 매번 경로를 다시
-  칠 필요가 없습니다. 또한 하위 폴더만이 아니라 **그 폴더에 직접 놓인 파일**도
-  셉니다. 그러지 않으면 합계가 폴더보다 작았고, 한 단계 들어갈 때마다 직전 단계에
-  남겨둔 파일이 사라졌습니다. 그 행도 펼쳐집니다 — 파일들은 더 들어갈 곳이 없으니
-  큰 순서로 제자리에서 펼쳐집니다.
-- **열어볼 만한 대시보드.** 홈 화면 위쪽에 숫자 넷이 놓입니다. 넷 다 즉시 읽히고,
-  넷 다 할 일을 가리킵니다: 휴지통에 들어 있는 용량과 비우기 버튼, Windows가 최대
-  절전·페이징 파일에 잡아둔 용량(누르면 용량 줄이기로 이동), 최근 7일간 시스템
-  드라이브 여유 공간의 변화, 그리고 마지막 정리로 회수한 용량. 뒤의 둘은 앱이 스스로
-  기록하는 작은 일별 파일에서 나옵니다.
-- **마스코트가 아이콘이 됐습니다.** 실행 파일, 창, 내비게이션 레일이 README에 쓰던
-  그림에서 오려낸 로고를 답니다.
-- **용량 줄이기 페이지.** 쓰든 안 쓰든 공간을 잡아두는 두 설정 — 최대 절전 파일과
-  페이징 파일 — 이 내비게이션 레일에 자기 자리를 갖습니다. 대시보드는 바꾸는 곳이
-  아니라 보는 곳이라서 옮겼습니다.
-- **최대 절전 모드.** `hiberfil.sys`가 차지하는 용량과, `powercfg`로 기능을 켜고 끄는
-  스위치입니다. Windows는 설치된 메모리 크기에 맞춰 이 파일을 미리 잡아두며, 실제로
-  최대 절전을 쓰든 안 쓰든 자리를 차지합니다 — 보통 수 GB입니다. 설정 변경에는 관리자
-  권한이 필요하고, 빠른 시작이 같은 파일을 쓰기 때문에 함께 꺼집니다.
-- **가상 메모리.** 드라이브별 `pagefile.sys`가 차지하는 용량, Windows가 크기를 어떻게
-  정하도록 설정돼 있는지, 그리고 설정을 Windows에 다시 맡기거나 시스템 드라이브에
-  크기 범위를 지정하거나 아예 없애는 대화상자입니다. WMI를 거치고, 관리자 권한이
-  필요하며, 다시 시작할 때 적용됩니다. 페이징 파일을 완전히 없애는 것은 여기서
-  유일하게 시스템을 불안정하게 만들 수 있는 설정이고, 고르기 전에 대화상자가 그렇게
-  말합니다.
+- **대시보드.** 홈 화면에 휴지통에 들어 있는 용량과 비우기 버튼, Windows가 최대
+  절전·페이징 파일에 잡아둔 용량, 최근 일주일간 여유 공간의 변화, 마지막 정리로
+  회수한 용량이 표시됩니다. 앱이 무언가를 지우면 알아서 갱신됩니다.
+- **용량 줄이기.** 쓰든 안 쓰든 Windows가 잡아두는 두 파일을 위한 페이지입니다.
+  `hiberfil.sys`와 `pagefile.sys`가 차지하는 용량을 보고, 최대 절전 모드를 켜고
+  끄고, 페이징 파일을 자동·고정 크기·사용 안 함으로 설정할 수 있습니다. 둘 다
+  관리자 권한이 필요합니다.
+- **디스크 분석이 폴더 안으로 들어갑니다.** 폴더를 누르면 그 안으로 들어가고 위쪽
+  경로로 되돌아옵니다. 단계마다 경로를 다시 칠 필요가 없습니다.
+- **빠른 정리 대상이 11곳에서 19곳으로.** 배달 최적화, Windows 오류 보고, GPU
+  셰이더 캐시, Teams·Discord·Slack·VS Code 캐시가 추가됐습니다. Firefox가
+  Chrome·Edge와 함께 들어왔고, 셋 다 기본 프로필만이 아니라 모든 프로필을 봅니다.
+- **검사에 걸린 시간을 표시합니다.**
+- **마스코트가 아이콘이 됐습니다.** 실행 파일, 창, 내비게이션 레일에 적용됩니다.
 
-### 변경
+### 수정
 
-- **CI가 빌드 전에 분석하고 테스트합니다.** `flutter analyze`는 빌드가 MSBuild 2분
-  뒤에야 알려주는 것을 1초에 잡습니다. 그리고 **무엇을 지울지 결정하는 순수 함수들**에
-  테스트가 생겼습니다: 보호 파일 가드, 각 정리 대상의 패턴 매칭, 크기·개수 서식,
-  `PagingFiles` 파서, 그리고 최대 절전 모드가 켜짐·꺼짐·읽을 수 없음 중 무엇인지
-  판정하는 규칙. 이번 릴리스가 고친 버그는 전부 이 중 하나에 있었습니다.
-- **중복 파일이 큰 그룹을 감당합니다.** 그룹 하나가 카드 하나였고 그 안의 파일은
-  Column에 들어 있었는데, Column은 가진 것을 전부 만듭니다 — 사본이 수천 개인 그룹은
-  리빌드마다 위젯 수천 개를 만들었고, 리빌드는 체크박스를 누를 때마다 일어납니다.
-  이제 헤더와 파일이 하나의 평평한 목록이라 그룹이 아무리 커도 화면에 보이는 것만
-  만듭니다. 선택 용량도 리빌드마다 전부 다시 세지 않고 바뀔 때 누적합니다.
-- 4 KB 이하 파일을 검사 중에 두 번 해시하지 않습니다. 빠른 해시가 이미 파일 전체를
-  덮으므로 확인 단계가 그 값을 재사용합니다. 작은 중복 파일이 많은 트리에서는 읽기가
-  절반으로 줄어듭니다.
+- 사본이 수천 개인 그룹에서 중복 파일 검사가 느려지던 문제를 고쳤습니다. 작은
+  파일을 두 번 읽던 것도 없애 검사가 더 빨리 끝납니다.
+- 중복 검사가 한도에서 멈출 때 아무 말도 하지 않아, 일부만 본 결과가 전부 본 것처럼
+  보였습니다. 이제 멈췄다고 알리고, 한도도 10만 개에서 40만 개로 올렸습니다.
+- 디스크 분석의 합계가 실제 폴더보다 작았습니다. 폴더에 직접 놓인 파일을 빼고
+  셌기 때문입니다. 이제 함께 세고, 그 행을 펼쳐 파일명을 볼 수 있습니다.
 
 ## v0.0.2
 
