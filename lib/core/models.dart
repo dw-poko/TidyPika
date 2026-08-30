@@ -27,10 +27,19 @@ class CleanTarget {
 }
 
 class FileEntry {
-  const FileEntry(this.path, this.size);
+  const FileEntry(this.path, this.size, {this.modified});
 
   final String path;
   final int size;
+
+  /// When the file was last written. Only filled in where it was asked for:
+  /// reading it costs a second look at every file, and most scans have no use
+  /// for it.
+  ///
+  /// Last *written*, not last opened — Windows stopped updating access times
+  /// by default years ago, so an access time would be a number that looks
+  /// like an answer and is not one.
+  final DateTime? modified;
 }
 
 class ScanResult {

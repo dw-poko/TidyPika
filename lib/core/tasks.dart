@@ -49,12 +49,18 @@ Stream<TaskEvent> _run(
 
 Stream<TaskEvent> scanTempFiles() => _run(_tempEntry);
 
-Stream<TaskEvent> scanLargeFilesTask(String root, int minSizeBytes) =>
-    _run(_largeEntry, [root, minSizeBytes]);
+Stream<TaskEvent> scanLargeFilesTask(
+  String root,
+  int minSizeBytes, {
+  int? untouchedForDays,
+}) =>
+    _run(_largeEntry, [root, minSizeBytes, untouchedForDays]);
 
-Stream<TaskEvent> findDuplicatesTask(String root) => _run(_duplicatesEntry, root);
+Stream<TaskEvent> findDuplicatesTask(String root) =>
+    _run(_duplicatesEntry, root);
 
-Stream<TaskEvent> analyzeDirectoryTask(String root) => _run(_analyzeEntry, root);
+Stream<TaskEvent> analyzeDirectoryTask(String root) =>
+    _run(_analyzeEntry, root);
 
 Stream<TaskEvent> cleanTask(List<String> files, bool useRecycleBin) =>
     _run(_cleanEntry, [files, useRecycleBin]);
@@ -79,6 +85,7 @@ void _largeEntry(List<Object?> args) {
     final results = scanLargeFiles(
       params[0]! as String,
       params[1]! as int,
+      untouchedForDays: params[2] as int?,
       onProgress: (progress) => send.send(TaskProgress(progress)),
     );
     send.send(TaskDone(results));

@@ -297,8 +297,15 @@ List<FileEntry> scanLargeFiles(
   String root,
   int minSizeBytes, {
   int maxResults = 500,
+  int? untouchedForDays,
   ProgressCallback? onProgress,
 }) {
+  // Only looked up when it is being filtered on: it is a second call per file,
+  // and the default scan has no use for it.
+  final cutoff = untouchedForDays == null
+      ? null
+      : DateTime.now().subtract(Duration(days: untouchedForDays));
+
   final results = <FileEntry>[];
   var seen = 0;
 
@@ -332,7 +339,13 @@ List<FileEntry> scanLargeFiles(
     for (final path in files) {
       final size = reclaimableSize(path);
       if (size != null && size >= minSizeBytes) {
-        results.add(FileEntry(path, size));
+        final modified = cutoff == null ? null : lastModified(path);
+
+        if (cutoff == null) {
+          results.add(FileEntry(path, size));
+        } else if (modified != null && modified.isBefore(cutoff)) {
+          results.add(FileEntry(path, size, modified: modified));
+        }
       }
 
       seen++;

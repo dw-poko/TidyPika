@@ -88,3 +88,12 @@ int? fileSize(String path) {
 /// Falls back to the length when the volume will not say — on anything but a
 /// compressed or sparse file the two are the same anyway.
 int? reclaimableSize(String path) => fileSizeOnDisk(path) ?? fileSize(path);
+
+/// When the file was last written, or null if that cannot be read.
+DateTime? lastModified(String path) {
+  try {
+    return File(extendedPath(path)).lastModifiedSync();
+  } catch (_) {
+    return null;
+  }
+}

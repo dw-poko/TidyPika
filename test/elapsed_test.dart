@@ -29,4 +29,16 @@ void main() {
       expect(seconds, lessThan(60));
     });
   });
+
+  group('formatDate', () {
+    test('is year-month-day, padded, so it sorts and reads anywhere', () {
+      expect(formatDate(DateTime(2026, 8, 30)), '2026-08-30');
+      expect(formatDate(DateTime(2026, 1, 5)), '2026-01-05');
+      expect(formatDate(DateTime(1999, 12, 31)), '1999-12-31');
+    });
+
+    test('ignores the time of day', () {
+      expect(formatDate(DateTime(2026, 3, 4, 23, 59)), '2026-03-04');
+    });
+  });
 }

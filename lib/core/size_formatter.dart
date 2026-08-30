@@ -40,3 +40,14 @@ String formatCount(int value) {
 
   return (minutes, elapsed.inMilliseconds / 1000 - minutes * 60);
 }
+
+/// A date as year-month-day.
+///
+/// The one order every language this app speaks reads the same way, and the
+/// one that sorts. Nothing here needs the time of day.
+String formatDate(DateTime value) {
+  final month = value.month.toString().padLeft(2, '0');
+  final day = value.day.toString().padLeft(2, '0');
+
+  return '${value.year}-$month-$day';
+}

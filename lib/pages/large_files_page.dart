@@ -24,6 +24,12 @@ class _LargeFilesPageState extends State<LargeFilesPage> {
   List<FileEntry> _results = const [];
   final Set<String> _selected = <String>{};
   int _minSizeMb = 50;
+
+  /// Days since a file was last written, or null for any age. Where the space
+  /// most people can actually give up tends to be: not the biggest files, but
+  /// the big ones nobody has touched in a year.
+  int? _untouchedDays;
+
   bool _recycle = true;
   bool _busy = false;
   StreamSubscription<TaskEvent>? _subscription;
@@ -55,8 +61,11 @@ class _LargeFilesPageState extends State<LargeFilesPage> {
       _selected.clear();
     });
 
-    _subscription =
-        scanLargeFilesTask(root, _minSizeMb * 1024 * 1024).listen((event) {
+    _subscription = scanLargeFilesTask(
+      root,
+      _minSizeMb * 1024 * 1024,
+      untouchedForDays: _untouchedDays,
+    ).listen((event) {
       switch (event) {
         case TaskProgress():
           _monitor.report(event.progress);
@@ -165,6 +174,22 @@ class _LargeFilesPageState extends State<LargeFilesPage> {
                   DropdownMenuEntry(value: 1024, label: '1 GB +'),
                 ],
               ),
+              const SizedBox(width: 12),
+              DropdownMenu<int?>(
+                initialSelection: _untouchedDays,
+                enabled: !_busy,
+                width: 190,
+                label: Text(t('large.untouched')),
+                inputDecorationTheme: Theme.of(context).inputDecorationTheme,
+                onSelected: (value) => setState(() => _untouchedDays = value),
+                dropdownMenuEntries: [
+                  DropdownMenuEntry(value: null, label: t('large.anyAge')),
+                  DropdownMenuEntry(value: 90, label: t('large.months3')),
+                  DropdownMenuEntry(value: 180, label: t('large.months6')),
+                  DropdownMenuEntry(value: 365, label: t('large.year1')),
+                  DropdownMenuEntry(value: 730, label: t('large.years2')),
+                ],
+              ),
             ],
           ),
           const SizedBox(height: 16),
@@ -204,7 +229,10 @@ class _LargeFilesPageState extends State<LargeFilesPage> {
                             overflow: TextOverflow.ellipsis,
                           ),
                           subtitle: Text(
-                            p.dirname(entry.path),
+                            entry.modified == null
+                                ? p.dirname(entry.path)
+                                : '${p.dirname(entry.path)}  ·  '
+                                    '${formatDate(entry.modified!)}',
                             overflow: TextOverflow.ellipsis,
                           ),
                           secondary: Text(
