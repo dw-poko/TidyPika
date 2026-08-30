@@ -305,6 +305,8 @@ const Map<String, String> _en = {
   'analyze.run': 'Analyze',
   'analyze.folders': '{0} folders',
   'analyze.loose': 'Files in this folder',
+  'analyze.asMap': 'Show as a map',
+  'analyze.asList': 'Show as a list',
 
   'col.files': 'Files',
   'col.size': 'Size',
@@ -562,6 +564,8 @@ const Map<String, String> _ko = {
   'analyze.run': '분석',
   'analyze.folders': '폴더 {0}개',
   'analyze.loose': '이 폴더에 있는 파일',
+  'analyze.asMap': '지도로 보기',
+  'analyze.asList': '목록으로 보기',
 
   'col.files': '파일',
   'col.size': '크기',
@@ -819,6 +823,8 @@ const Map<String, String> _ja = {
   'analyze.run': '分析',
   'analyze.folders': '{0} フォルダー',
   'analyze.loose': 'このフォルダー内のファイル',
+  'analyze.asMap': 'マップで表示',
+  'analyze.asList': 'リストで表示',
 
   'col.files': 'ファイル数',
   'col.size': 'サイズ',
@@ -1064,6 +1070,8 @@ const Map<String, String> _zh = {
   'analyze.run': '分析',
   'analyze.folders': '{0} 个文件夹',
   'analyze.loose': '此文件夹中的文件',
+  'analyze.asMap': '以图形显示',
+  'analyze.asList': '以列表显示',
 
   'col.files': '文件数',
   'col.size': '大小',

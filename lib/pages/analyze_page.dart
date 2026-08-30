@@ -6,6 +6,7 @@ import 'package:path/path.dart' as p;
 
 import '../core/models.dart';
 import '../core/paths.dart';
+import '../core/treemap.dart';
 import '../core/size_formatter.dart';
 import '../core/tasks.dart';
 import '../l10n/strings.dart';
@@ -38,6 +39,11 @@ class _AnalyzePageState extends State<AnalyzePage> {
   /// off it rather than kept as a separate stack — typing a path and clicking
   /// into one then behave the same.
   String _current = '';
+
+  /// Whether the results are drawn as area or listed as rows. The map answers
+  /// "how much of this folder is that one"; the list answers "what is in here
+  /// and how big is each". Both are worth having, neither replaces the other.
+  bool _asMap = false;
 
   bool _busy = false;
   StreamSubscription<TaskEvent>? _subscription;
@@ -108,10 +114,25 @@ class _AnalyzePageState extends State<AnalyzePage> {
     return PageScaffold(
       title: t('analyze.title'),
       subtitle: t('analyze.subtitle'),
-      action: FilledButton.icon(
-        onPressed: _busy ? null : _analyze,
-        icon: const Icon(Icons.donut_small_outlined, size: 18),
-        label: Text(t('analyze.run')),
+      action: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (_entries.isNotEmpty) ...[
+            IconButton(
+              tooltip: t(_asMap ? 'analyze.asList' : 'analyze.asMap'),
+              isSelected: _asMap,
+              icon: const Icon(Icons.grid_view_outlined),
+              selectedIcon: const Icon(Icons.view_list_outlined),
+              onPressed: () => setState(() => _asMap = !_asMap),
+            ),
+            const SizedBox(width: 8),
+          ],
+          FilledButton.icon(
+            onPressed: _busy ? null : _analyze,
+            icon: const Icon(Icons.donut_small_outlined, size: 18),
+            label: Text(t('analyze.run')),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -148,50 +169,56 @@ class _AnalyzePageState extends State<AnalyzePage> {
           Expanded(
             child: _entries.isEmpty
                 ? const EmptyState(icon: Icons.donut_small_outlined)
-                : Card(
-                    margin: EdgeInsets.zero,
-                    clipBehavior: Clip.antiAlias,
-                    child: ListView.separated(
-                      itemCount: _entries.length,
-                      separatorBuilder: (context, index) =>
-                          const Divider(height: 1),
-                      itemBuilder: (context, index) {
-                        final entry = _entries[index];
+                : _asMap
+                    ? _Treemap(
+                        entries: _entries,
+                        onOpen: (entry) => _analyzePath(entry.path),
+                      )
+                    : Card(
+                        margin: EdgeInsets.zero,
+                        clipBehavior: Clip.antiAlias,
+                        child: ListView.separated(
+                          itemCount: _entries.length,
+                          separatorBuilder: (context, index) =>
+                              const Divider(height: 1),
+                          itemBuilder: (context, index) {
+                            final entry = _entries[index];
 
-                        if (!entry.isLooseFiles) {
-                          return _DirectoryRow(
-                            entry: entry,
-                            total: total,
-                            onOpen:
-                                _busy ? null : () => _analyzePath(entry.path),
-                          );
-                        }
+                            if (!entry.isLooseFiles) {
+                              return _DirectoryRow(
+                                entry: entry,
+                                total: total,
+                                onOpen: _busy
+                                    ? null
+                                    : () => _analyzePath(entry.path),
+                              );
+                            }
 
-                        // The loose files have nowhere to descend to, so the
-                        // row unfolds where it stands.
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            _DirectoryRow(
-                              entry: entry,
-                              total: total,
-                              expanded: _looseOpen,
-                              onOpen: _busy
-                                  ? null
-                                  : () => setState(
-                                        () => _looseOpen = !_looseOpen,
-                                      ),
-                            ),
-                            if (_looseOpen)
-                              _LooseFileList(
-                                files: _looseFiles,
-                                total: entry.fileCount,
-                              ),
-                          ],
-                        );
-                      },
-                    ),
-                  ),
+                            // The loose files have nowhere to descend to, so the
+                            // row unfolds where it stands.
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                _DirectoryRow(
+                                  entry: entry,
+                                  total: total,
+                                  expanded: _looseOpen,
+                                  onOpen: _busy
+                                      ? null
+                                      : () => setState(
+                                            () => _looseOpen = !_looseOpen,
+                                          ),
+                                ),
+                                if (_looseOpen)
+                                  _LooseFileList(
+                                    files: _looseFiles,
+                                    total: entry.fileCount,
+                                  ),
+                              ],
+                            );
+                          },
+                        ),
+                      ),
           ),
         ],
       ),
@@ -417,6 +444,130 @@ class _LooseFileList extends StatelessWidget {
               ),
             ),
         ],
+      ),
+    );
+  }
+}
+
+/// The folder drawn as area.
+///
+/// A list of sizes tells you which is biggest; a treemap tells you whether the
+/// biggest is half the folder or a twentieth of it, which is the question
+/// somebody staring at a full disk is actually asking.
+class _Treemap extends StatelessWidget {
+  const _Treemap({required this.entries, required this.onOpen});
+
+  final List<DirectoryEntry> entries;
+  final void Function(DirectoryEntry) onOpen;
+
+  @override
+  Widget build(BuildContext context) {
+    LanguageScope.watch(context);
+
+    final scheme = Theme.of(context).colorScheme;
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final tiles = squarify(
+          [for (final entry in entries) entry.size],
+          constraints.maxWidth,
+          constraints.maxHeight,
+        );
+
+        return Stack(
+          children: [
+            for (final tile in tiles)
+              Positioned(
+                left: tile.left,
+                top: tile.top,
+                width: tile.width,
+                height: tile.height,
+                child: _TreemapTile(
+                  entry: entries[tile.index],
+                  // The shades run through the palette so neighbours are told
+                  // apart by colour as well as by line.
+                  color: Color.lerp(
+                    scheme.primaryContainer,
+                    scheme.tertiaryContainer,
+                    entries.length < 2 ? 0 : tile.index / (entries.length - 1),
+                  )!,
+                  onOpen: entries[tile.index].isLooseFiles
+                      ? null
+                      : () => onOpen(entries[tile.index]),
+                ),
+              ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _TreemapTile extends StatelessWidget {
+  const _TreemapTile({
+    required this.entry,
+    required this.color,
+    required this.onOpen,
+  });
+
+  final DirectoryEntry entry;
+  final Color color;
+  final VoidCallback? onOpen;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final name = entry.isLooseFiles ? t('analyze.loose') : entry.name;
+
+    return Padding(
+      padding: const EdgeInsets.all(1),
+      child: Material(
+        color: color,
+        borderRadius: BorderRadius.circular(3),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onOpen,
+          child: Tooltip(
+            message: '$name  ·  ${formatSize(entry.size)}',
+            waitDuration: const Duration(milliseconds: 400),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // A rectangle too small for its own name is left blank
+                  // rather than filled with clipped letters; the tooltip is
+                  // there for those.
+                  Flexible(
+                    child: Text(
+                      name,
+                      maxLines: 1,
+                      overflow: TextOverflow.clip,
+                      softWrap: false,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: scheme.onPrimaryContainer,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  Flexible(
+                    child: Text(
+                      formatSize(entry.size),
+                      maxLines: 1,
+                      overflow: TextOverflow.clip,
+                      softWrap: false,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: scheme.onPrimaryContainer.withValues(alpha: 0.8),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }
