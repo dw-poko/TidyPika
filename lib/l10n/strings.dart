@@ -226,6 +226,27 @@ const Map<String, String> _en = {
       'powercfg could not change the setting. Its own output '
       'follows.',
 
+  'store.title': 'Windows component store',
+  'store.subtitle': 'WinSxS — update and servicing files',
+  'store.unknown': 'DISM would not report; needs administrator rights',
+  'store.reported': 'Explorer says',
+  'store.shared': 'Shared with Windows',
+  'store.reclaimable': 'Recoverable',
+  'store.clean': 'Clean up',
+  'store.hardLinks':
+      'The store is built from hard links: the same bytes appear here and '
+      'in the live Windows folders, so a folder size counts them twice. '
+      'These figures come from DISM, which counts them once.',
+  'store.confirm': 'Clean up the component store?',
+  'store.confirmBody':
+      'Windows removes superseded components and the backups that roll '
+      'updates back. Updates already installed stay; only the way back '
+      'goes. It runs through DISM and takes minutes, not seconds.',
+  'store.needsAdmin':
+      'The component store is serviced by Windows itself, so reading and '
+      'cleaning it need administrator rights.',
+  'store.failed': 'DISM could not clean the store. Its own output follows.',
+
   'page.title': 'Virtual memory',
   'page.change': 'Change',
   'page.none': 'Off — no paging file',
@@ -451,6 +472,27 @@ const Map<String, String> _ko = {
       'powercfg가 설정을 바꾸지 못했습니다. 아래는 powercfg가 낸 '
       '출력입니다.',
 
+  'store.title': 'Windows 구성 요소 저장소',
+  'store.subtitle': 'WinSxS — 업데이트와 서비스 파일',
+  'store.unknown': 'DISM이 응답하지 않았습니다. 관리자 권한이 필요합니다',
+  'store.reported': '탐색기 기준',
+  'store.shared': 'Windows와 공유',
+  'store.reclaimable': '회수 가능',
+  'store.clean': '정리',
+  'store.hardLinks':
+      '이 저장소는 하드 링크로 되어 있습니다. 같은 바이트가 여기와 실제 '
+      'Windows 폴더에 동시에 있어서, 폴더 크기로 재면 두 번 세어집니다. '
+      '위 수치는 한 번만 세는 DISM에서 가져온 값입니다.',
+  'store.confirm': '구성 요소 저장소를 정리할까요?',
+  'store.confirmBody':
+      'Windows가 대체된 구성 요소와 업데이트를 되돌리기 위한 백업을 '
+      '제거합니다. 이미 설치된 업데이트는 그대로 남고, 되돌릴 수단만 '
+      '없어집니다. DISM으로 실행되며 몇 분 걸립니다.',
+  'store.needsAdmin':
+      '구성 요소 저장소는 Windows가 직접 관리하는 영역이라, 읽는 것도 '
+      '정리하는 것도 관리자 권한이 필요합니다.',
+  'store.failed': 'DISM이 저장소를 정리하지 못했습니다. 아래는 그 출력입니다.',
+
   'page.title': '가상 메모리',
   'page.change': '변경',
   'page.none': '사용 안 함 — 페이징 파일 없음',
@@ -672,6 +714,27 @@ const Map<String, String> _ja = {
       'powercfg が設定を変更できませんでした。以下は powercfg の'
       '出力です。',
 
+  'store.title': 'Windows コンポーネント ストア',
+  'store.subtitle': 'WinSxS — 更新とサービス用のファイル',
+  'store.unknown': 'DISM が応答しませんでした。管理者権限が必要です',
+  'store.reported': 'エクスプローラー表示',
+  'store.shared': 'Windows と共有',
+  'store.reclaimable': '回収可能',
+  'store.clean': 'クリーンアップ',
+  'store.hardLinks':
+      'このストアはハードリンクでできています。同じバイトがここと実際の '
+      'Windows フォルダーの両方にあるため、フォルダーサイズでは二重に '
+      '数えられます。上の数値は一度だけ数える DISM のものです。',
+  'store.confirm': 'コンポーネント ストアをクリーンアップしますか?',
+  'store.confirmBody':
+      '置き換えられたコンポーネントと、更新を戻すためのバックアップを '
+      'Windows が削除します。導入済みの更新はそのまま残り、戻す手段だけが '
+      'なくなります。DISM で実行され、数分かかります。',
+  'store.needsAdmin':
+      'コンポーネント ストアは Windows 自身が管理する領域なので、読み取りも '
+      'クリーンアップも管理者権限が必要です。',
+  'store.failed': 'DISM がストアをクリーンアップできませんでした。以下は出力です。',
+
   'page.title': '仮想メモリ',
   'page.change': '変更',
   'page.none': 'オフ — ページファイルなし',
@@ -885,6 +948,25 @@ const Map<String, String> _zh = {
   'hiber.disable': '关闭',
   'hiber.needsAdmin': '休眠属于系统设置，需要管理员权限。',
   'hiber.failed': 'powercfg 未能更改设置。以下是 powercfg 的输出。',
+
+  'store.title': 'Windows 组件存储',
+  'store.subtitle': 'WinSxS — 更新和服务文件',
+  'store.unknown': 'DISM 没有回应，需要管理员权限',
+  'store.reported': '资源管理器显示',
+  'store.shared': '与 Windows 共享',
+  'store.reclaimable': '可回收',
+  'store.clean': '清理',
+  'store.hardLinks':
+      '该存储由硬链接构成：同样的字节同时出现在这里和实际的 Windows '
+      '文件夹中，按文件夹大小统计会重复计算。以上数值来自只计算一次的 '
+      'DISM。',
+  'store.confirm': '要清理组件存储吗?',
+  'store.confirmBody':
+      'Windows 将删除被取代的组件以及用于回滚更新的备份。已安装的更新会 '
+      '保留，只是无法再回滚。通过 DISM 执行，需要几分钟。',
+  'store.needsAdmin':
+      '组件存储由 Windows 自行维护，读取和清理都需要管理员权限。',
+  'store.failed': 'DISM 未能清理该存储。以下是它的输出。',
 
   'page.title': '虚拟内存',
   'page.change': '更改',

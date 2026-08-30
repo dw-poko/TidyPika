@@ -47,9 +47,8 @@ String extendedPath(String path) {
     return r'\\?\UNC\' + normalised.substring(2);
   }
 
-  final isDrivePath = normalised.length >= 3 &&
-      normalised[1] == ':' &&
-      normalised[2] == r'\';
+  final isDrivePath =
+      normalised.length >= 3 && normalised[1] == ':' && normalised[2] == r'\';
 
   return isDrivePath ? r'\\?\' + normalised : normalised;
 }

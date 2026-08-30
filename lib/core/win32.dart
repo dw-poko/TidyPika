@@ -18,9 +18,9 @@ final DynamicLibrary _advapi32 = DynamicLibrary.open('advapi32.dll');
 final int Function() getLogicalDrives = _kernel32
     .lookupFunction<Uint32 Function(), int Function()>('GetLogicalDrives');
 
-final int Function(Pointer<Utf16>) getDriveType =
-    _kernel32.lookupFunction<Uint32 Function(Pointer<Utf16>),
-        int Function(Pointer<Utf16>)>('GetDriveTypeW');
+final int Function(Pointer<Utf16>) getDriveType = _kernel32.lookupFunction<
+    Uint32 Function(Pointer<Utf16>),
+    int Function(Pointer<Utf16>)>('GetDriveTypeW');
 
 final int Function(
   Pointer<Utf16>,
@@ -171,12 +171,11 @@ int? fileSizeFromDirectory(String path) {
   }
 }
 
-final int Function() getLastError = _kernel32
-    .lookupFunction<Uint32 Function(), int Function()>('GetLastError');
+final int Function() getLastError =
+    _kernel32.lookupFunction<Uint32 Function(), int Function()>('GetLastError');
 
 final int Function(Pointer<Utf16>, Pointer<Uint32>) getCompressedFileSize =
-    _kernel32.lookupFunction<
-        Uint32 Function(Pointer<Utf16>, Pointer<Uint32>),
+    _kernel32.lookupFunction<Uint32 Function(Pointer<Utf16>, Pointer<Uint32>),
         int Function(Pointer<Utf16>, Pointer<Uint32>)>(
   'GetCompressedFileSizeW',
 );

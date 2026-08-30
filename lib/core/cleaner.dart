@@ -143,8 +143,7 @@ void _recycle(
         ..wFunc = foDelete
         ..pFrom = from
         ..pTo = nullptr
-        ..fFlags =
-            fofAllowUndo | fofNoConfirmation | fofNoErrorUi | fofSilent
+        ..fFlags = fofAllowUndo | fofNoConfirmation | fofNoErrorUi | fofSilent
         ..fAnyOperationsAborted = 0
         ..hNameMappings = nullptr
         ..lpszProgressTitle = nullptr;

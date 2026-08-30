@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../core/component_store.dart';
 import '../core/disk_scanner.dart';
 import '../core/hibernation.dart';
 import '../core/pagefile.dart';
@@ -24,8 +25,10 @@ class ReclaimPage extends StatefulWidget {
 class _ReclaimPageState extends State<ReclaimPage> {
   HibernationInfo? _hibernation;
   PagefileInfo? _pagefile;
+  ComponentStore? _store;
   bool _busy = false;
   bool _pageBusy = false;
+  bool _storeBusy = false;
 
   @override
   void initState() {
@@ -52,6 +55,77 @@ class _ReclaimPageState extends State<ReclaimPage> {
       _hibernation = hibernation;
       _pagefile = pagefile;
     });
+
+    _loadComponentStore();
+  }
+
+  /// DISM is a process and takes a moment, so the card fills in after the
+  /// others rather than holding the page up. Unelevated it refuses outright,
+  /// which shows as a card that admits it does not know.
+  Future<void> _loadComponentStore() async {
+    if (!isElevated()) {
+      if (mounted) setState(() => _store = const ComponentStore());
+      return;
+    }
+
+    setState(() => _storeBusy = true);
+    final store = await readComponentStore();
+    if (!mounted) return;
+
+    setState(() {
+      _store = store;
+      _storeBusy = false;
+    });
+  }
+
+  Future<void> _cleanComponentStore() async {
+    final store = _store;
+    if (store == null) return;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        icon: const Icon(Icons.inventory_2_outlined),
+        title: Text(t('store.confirm')),
+        content: SizedBox(width: 460, child: Text(t('store.confirmBody'))),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(t('common.cancel')),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text(t('store.clean')),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+
+    if (!isElevated()) {
+      await showElevationNotice(context, messageKey: 'store.needsAdmin');
+      return;
+    }
+
+    setState(() => _storeBusy = true);
+    final result = await cleanComponentStore();
+    if (!mounted) return;
+    setState(() => _storeBusy = false);
+
+    if (result.exitCode != 0) {
+      final output = '${result.stdout}\n${result.stderr}'.trim();
+      await showErrorDialog(
+        context,
+        output.isEmpty
+            ? '${t('store.failed')}\n\nexit code ${result.exitCode}'
+            : '${t('store.failed')}\n\n$output',
+      );
+      if (!mounted) return;
+    } else {
+      announceStorageChanged();
+    }
+
+    await _loadComponentStore();
   }
 
   Future<void> _changePagefile() async {
@@ -177,7 +251,14 @@ class _ReclaimPageState extends State<ReclaimPage> {
               busy: _pageBusy,
               onChange: _pageBusy ? null : _changePagefile,
             ),
+            const SizedBox(height: 12),
           ],
+          if (_store != null)
+            _ComponentStoreCard(
+              store: _store!,
+              busy: _storeBusy,
+              onClean: _storeBusy ? null : _cleanComponentStore,
+            ),
           const Spacer(),
         ],
       ),
@@ -588,6 +669,158 @@ class _PagefileDialogState extends State<_PagefileDialog> {
           child: Text(t('common.cancel')),
         ),
         FilledButton(onPressed: _apply, child: Text(t('page.apply'))),
+      ],
+    );
+  }
+}
+
+/// The component store, and the one number about it worth trusting.
+///
+/// The card leads with what a walk would report against what is really there,
+/// because the difference is the whole reason this card exists rather than a
+/// row in Disk Analysis.
+class _ComponentStoreCard extends StatelessWidget {
+  const _ComponentStoreCard({
+    required this.store,
+    required this.busy,
+    required this.onClean,
+  });
+
+  final ComponentStore store;
+  final bool busy;
+  final VoidCallback? onClean;
+
+  @override
+  Widget build(BuildContext context) {
+    LanguageScope.watch(context);
+
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final reclaimable = store.reclaimable;
+
+    return Card(
+      margin: EdgeInsets.zero,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 14, 16, 14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.inventory_2_outlined,
+                  size: 20,
+                  color: scheme.onSurfaceVariant,
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(t('store.title'), style: theme.textTheme.titleSmall),
+                      const SizedBox(height: 2),
+                      Text(
+                        store.known ? t('store.subtitle') : t('store.unknown'),
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.bodySmall
+                            ?.copyWith(color: scheme.onSurfaceVariant),
+                      ),
+                    ],
+                  ),
+                ),
+                if (store.actualSize != null) ...[
+                  const SizedBox(width: 12),
+                  Text(
+                    formatSize(store.actualSize!),
+                    style: theme.textTheme.titleMedium
+                        ?.copyWith(fontWeight: FontWeight.w600),
+                  ),
+                ],
+                const SizedBox(width: 16),
+                if (busy)
+                  const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                else
+                  OutlinedButton(
+                    onPressed: (reclaimable ?? 0) > 0 ? onClean : null,
+                    child: Text(t('store.clean')),
+                  ),
+              ],
+            ),
+            if (store.known) ...[
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 18,
+                runSpacing: 6,
+                children: [
+                  if (store.reportedSize != null)
+                    _StoreFigure(
+                      label: t('store.reported'),
+                      value: formatSize(store.reportedSize!),
+                      muted: true,
+                    ),
+                  if (store.sharedWithWindows != null)
+                    _StoreFigure(
+                      label: t('store.shared'),
+                      value: formatSize(store.sharedWithWindows!),
+                      muted: true,
+                    ),
+                  if (reclaimable != null)
+                    _StoreFigure(
+                      label: t('store.reclaimable'),
+                      value: formatSize(reclaimable),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Text(
+                t('store.hardLinks'),
+                style: theme.textTheme.bodySmall
+                    ?.copyWith(color: scheme.onSurfaceVariant),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _StoreFigure extends StatelessWidget {
+  const _StoreFigure({
+    required this.label,
+    required this.value,
+    this.muted = false,
+  });
+
+  final String label;
+  final String value;
+  final bool muted;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          label,
+          style: theme.textTheme.bodySmall
+              ?.copyWith(color: scheme.onSurfaceVariant),
+        ),
+        const SizedBox(width: 6),
+        Text(
+          value,
+          style: theme.textTheme.bodySmall?.copyWith(
+            fontWeight: FontWeight.w600,
+            color: muted ? scheme.onSurfaceVariant : null,
+          ),
+        ),
       ],
     );
   }
