@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'exclusions.dart';
 import 'paths.dart';
 import 'win32.dart';
 
@@ -13,7 +14,12 @@ import 'win32.dart';
 /// deep enough to pass 260 characters is walked rather than skipped. A cleaner
 /// that cannot see into a deep node_modules is blind to one of the largest
 /// things it is for. Paths come back out in their plain form.
-Iterable<String> walkFiles(String root) sync* {
+Iterable<String> walkFiles(
+  String root, {
+  Set<String> excluded = const {},
+}) sync* {
+  if (isExcluded(root, excluded)) return;
+
   final stack = <String>[root];
 
   while (stack.isNotEmpty) {
@@ -30,7 +36,10 @@ Iterable<String> walkFiles(String root) sync* {
       if (entry is File) {
         yield displayPath(entry.path);
       } else if (entry is Directory) {
-        stack.add(displayPath(entry.path));
+        final path = displayPath(entry.path);
+        if (isExcluded(path, excluded)) continue;
+
+        stack.add(path);
       }
     }
   }

@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:path/path.dart' as p;
 
+import 'exclusions.dart';
 import 'fs_walk.dart';
 import 'models.dart';
 
@@ -11,10 +12,10 @@ const int _progressInterval = 2000;
 List<CleanTarget> getCleanTargets() {
   final env = Platform.environment;
   final windows = env['SystemRoot'] ?? r'C:\Windows';
-  final localAppData =
-      env['LOCALAPPDATA'] ?? p.join(env['USERPROFILE'] ?? r'C:\', 'AppData', 'Local');
-  final appData =
-      env['APPDATA'] ?? p.join(env['USERPROFILE'] ?? r'C:\', 'AppData', 'Roaming');
+  final localAppData = env['LOCALAPPDATA'] ??
+      p.join(env['USERPROFILE'] ?? r'C:\', 'AppData', 'Local');
+  final appData = env['APPDATA'] ??
+      p.join(env['USERPROFILE'] ?? r'C:\', 'AppData', 'Roaming');
   final temp = env['TEMP'] ?? env['TMP'] ?? p.join(localAppData, 'Temp');
   final programData = env['ProgramData'] ?? r'C:\ProgramData';
 
@@ -207,10 +208,12 @@ ScanResult scanTarget(
   var errors = 0;
   var seen = processedSoFar;
 
+  final excluded = excludedRoots();
+
   for (final basePath in target.paths) {
     if (basePath.isEmpty || !Directory(basePath).existsSync()) continue;
 
-    for (final path in walkFiles(basePath)) {
+    for (final path in walkFiles(basePath, excluded: excluded)) {
       seen++;
       if (seen % _progressInterval == 0) {
         onProgress?.call(
@@ -301,7 +304,12 @@ List<FileEntry> scanLargeFiles(
 
   onProgress?.call(ScanProgress(ScanStage.preparing, detail: root));
 
-  final branches = <String>[root, ...listSubdirectories(root)];
+  final excluded = excludedRoots();
+  final branches = <String>[
+    root,
+    for (final child in listSubdirectories(root))
+      if (!isExcluded(child, excluded)) child,
+  ];
 
   for (var i = 0; i < branches.length; i++) {
     final branch = branches[i];
@@ -317,7 +325,9 @@ List<FileEntry> scanLargeFiles(
 
     // The first branch is the root itself, so only its direct files: everything
     // below is covered by the sub-directory branches.
-    final files = i == 0 ? listFilesShallow(branch) : walkFiles(branch);
+    final files = i == 0
+        ? listFilesShallow(branch)
+        : walkFiles(branch, excluded: excluded);
 
     for (final path in files) {
       final size = reclaimableSize(path);
@@ -364,7 +374,11 @@ DirectoryReport analyzeDirectory(
 }) {
   onProgress?.call(ScanProgress(ScanStage.preparing, detail: root));
 
-  final children = listSubdirectories(root);
+  final excluded = excludedRoots();
+  final children = [
+    for (final child in listSubdirectories(root))
+      if (!isExcluded(child, excluded)) child,
+  ];
   final entries = <DirectoryEntry>[];
   var seen = 0;
 
@@ -415,7 +429,7 @@ DirectoryReport analyzeDirectory(
     var size = 0;
     var count = 0;
 
-    for (final path in walkFiles(dir)) {
+    for (final path in walkFiles(dir, excluded: excluded)) {
       final fileBytes = reclaimableSize(path);
       if (fileBytes != null) {
         size += fileBytes;

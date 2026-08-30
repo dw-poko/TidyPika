@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:path/path.dart' as p;
 
 import '../core/disk_scanner.dart';
+import '../core/exclusions.dart';
 import '../core/history.dart';
 import '../core/storage_events.dart';
 import '../core/models.dart';
@@ -119,10 +120,8 @@ class RiskChip extends StatelessWidget {
       ),
       child: Text(
         t('risk.${risk.name}'),
-        style: Theme.of(context)
-            .textTheme
-            .labelSmall
-            ?.copyWith(color: foreground),
+        style:
+            Theme.of(context).textTheme.labelSmall?.copyWith(color: foreground),
       ),
     );
   }
@@ -264,6 +263,153 @@ Future<bool> confirmDelete(
   );
 
   return confirmed ?? false;
+}
+
+/// The folders every scan leaves alone.
+///
+/// Global rather than per page, because a folder worth protecting is worth
+/// protecting from all four scans — so it is reached from the rail, next to
+/// the other thing that applies everywhere.
+Future<void> showExclusions(BuildContext context) {
+  return showDialog<void>(
+    context: context,
+    builder: (context) => const _ExclusionsDialog(),
+  );
+}
+
+class _ExclusionsDialog extends StatefulWidget {
+  const _ExclusionsDialog();
+
+  @override
+  State<_ExclusionsDialog> createState() => _ExclusionsDialogState();
+}
+
+class _ExclusionsDialogState extends State<_ExclusionsDialog> {
+  late List<String> _folders = readExclusions();
+  final TextEditingController _entry = TextEditingController();
+
+  @override
+  void dispose() {
+    _entry.dispose();
+    super.dispose();
+  }
+
+  void _add() {
+    final folder = _entry.text.trim();
+    if (folder.isEmpty) return;
+
+    // Comparing normalised keeps the same folder from being listed twice
+    // under two spellings.
+    final normalised = normaliseExclusion(folder);
+    if (_folders.any((f) => normaliseExclusion(f) == normalised)) {
+      _entry.clear();
+      return;
+    }
+
+    setState(() {
+      _folders = [..._folders, folder];
+      _entry.clear();
+    });
+    writeExclusions(_folders);
+  }
+
+  void _remove(String folder) {
+    setState(() => _folders = [..._folders]..remove(folder));
+    writeExclusions(_folders);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    LanguageScope.watch(context);
+
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+
+    return AlertDialog(
+      icon: const Icon(Icons.block_outlined),
+      title: Text(t('exclude.title')),
+      content: SizedBox(
+        width: 520,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              t('exclude.body'),
+              style: theme.textTheme.bodySmall
+                  ?.copyWith(color: scheme.onSurfaceVariant),
+            ),
+            const SizedBox(height: 14),
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _entry,
+                    onSubmitted: (_) => _add(),
+                    decoration: InputDecoration(
+                      labelText: t('common.folder'),
+                      hintText: r'C:\Games',
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                FilledButton(onPressed: _add, child: Text(t('exclude.add'))),
+              ],
+            ),
+            const SizedBox(height: 14),
+            if (_folders.isEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 18),
+                child: Text(
+                  t('exclude.none'),
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.bodySmall
+                      ?.copyWith(color: scheme.onSurfaceVariant),
+                ),
+              )
+            else
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxHeight: 220),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color:
+                        scheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: _folders.length,
+                    itemBuilder: (context, index) {
+                      final folder = _folders[index];
+
+                      return ListTile(
+                        dense: true,
+                        title: Text(
+                          folder,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.bodySmall,
+                        ),
+                        trailing: IconButton(
+                          tooltip: t('exclude.remove'),
+                          icon: const Icon(Icons.close, size: 18),
+                          onPressed: () => _remove(folder),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+      actions: [
+        FilledButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(t('result.close')),
+        ),
+      ],
+    );
+  }
 }
 
 /// Language picker.
@@ -476,8 +622,8 @@ class _CleanResultDialog extends StatelessWidget {
                         .withValues(alpha: 0.5),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 12, vertical: 10),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                   child: ListView.builder(
                     shrinkWrap: true,
                     itemCount: shown.length + (hidden > 0 ? 1 : 0),
@@ -574,10 +720,8 @@ class _ReasonChip extends StatelessWidget {
       ),
       child: Text(
         '${t('failure.${reason.name}')}  ${formatCount(count)}',
-        style: Theme.of(context)
-            .textTheme
-            .labelSmall
-            ?.copyWith(color: foreground),
+        style:
+            Theme.of(context).textTheme.labelSmall?.copyWith(color: foreground),
       ),
     );
   }

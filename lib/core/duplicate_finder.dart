@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:convert/convert.dart';
 import 'package:crypto/crypto.dart';
 
+import 'exclusions.dart';
 import 'fs_walk.dart';
 import 'models.dart';
 
@@ -30,7 +31,7 @@ DuplicateScan findDuplicates(
   final sizeGroups = <int, List<String>>{};
   var indexed = 0;
 
-  for (final path in walkFiles(root)) {
+  for (final path in walkFiles(root, excluded: excludedRoots())) {
     final size = fileSize(path);
     if (size == null) continue;
 

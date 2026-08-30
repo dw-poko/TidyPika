@@ -318,6 +318,15 @@ const Map<String, String> _en = {
   'time.seconds': '{0}s',
   'time.minutes': '{0}m {1}s',
 
+  'exclude.title': 'Excluded folders',
+  'exclude.body':
+      'Every scan skips these and everything inside them. A game install, '
+      'a backup whose duplicates are the point, footage you are working '
+      'on — all of it looks like waste from the outside.',
+  'exclude.add': 'Add',
+  'exclude.remove': 'Remove',
+  'exclude.none': 'Nothing is excluded. Every scan sees everything.',
+
   'common.browse': 'Browse',
   'common.cancel': 'Cancel',
   'common.selectAll': 'Select all',
@@ -559,6 +568,15 @@ const Map<String, String> _ko = {
   'status.scanned': '파일 {0}개',
   'time.seconds': '{0}초',
   'time.minutes': '{0}분 {1}초',
+
+  'exclude.title': '제외할 폴더',
+  'exclude.body':
+      '모든 검사가 이 폴더와 그 안을 건너뜁니다. 게임 설치 폴더, 중복이 '
+      '의도인 백업, 작업 중인 영상 소재 — 밖에서 보면 전부 낭비처럼 '
+      '보이는 것들입니다.',
+  'exclude.add': '추가',
+  'exclude.remove': '제거',
+  'exclude.none': '제외된 폴더가 없습니다. 모든 검사가 전부 봅니다.',
 
   'common.browse': '찾아보기',
   'common.cancel': '취소',
@@ -802,6 +820,15 @@ const Map<String, String> _ja = {
   'time.seconds': '{0} 秒',
   'time.minutes': '{0} 分 {1} 秒',
 
+  'exclude.title': '除外するフォルダー',
+  'exclude.body':
+      'すべての検査がこのフォルダーとその中を飛ばします。ゲームの '
+      'インストール先、重複が目的のバックアップ、作業中の素材 — 外から '
+      '見ると無駄に見えるものたちです。',
+  'exclude.add': '追加',
+  'exclude.remove': '削除',
+  'exclude.none': '除外はありません。すべての検査が全体を見ます。',
+
   'common.browse': '参照',
   'common.cancel': 'キャンセル',
   'common.selectAll': 'すべて選択',
@@ -1031,6 +1058,14 @@ const Map<String, String> _zh = {
   'status.scanned': '{0} 个文件',
   'time.seconds': '{0} 秒',
   'time.minutes': '{0} 分 {1} 秒',
+
+  'exclude.title': '排除的文件夹',
+  'exclude.body':
+      '所有扫描都会跳过这些文件夹及其内容。游戏安装目录、以重复为目的的 '
+      '备份、正在使用的素材 — 从外面看都像是浪费。',
+  'exclude.add': '添加',
+  'exclude.remove': '移除',
+  'exclude.none': '没有排除任何文件夹，所有扫描都会看到全部内容。',
 
   'common.browse': '浏览',
   'common.cancel': '取消',

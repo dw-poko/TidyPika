@@ -60,7 +60,8 @@ class TidyPikaApp extends StatelessWidget {
   ThemeData _themeFor(Brightness brightness) {
     return ThemeData(
       useMaterial3: true,
-      colorScheme: ColorScheme.fromSeed(seedColor: _seed, brightness: brightness),
+      colorScheme:
+          ColorScheme.fromSeed(seedColor: _seed, brightness: brightness),
       // Segoe UI carries no CJK at all, so the fallbacks do that work.
       fontFamily: 'Segoe UI',
       fontFamilyFallback: _fallbacksFor(language.value),
@@ -97,7 +98,6 @@ class AppShell extends StatefulWidget {
 }
 
 class _AppShellState extends State<AppShell> {
-
   // Kept alive in an IndexedStack so scan results survive switching pages.
   static const List<Widget> _pages = [
     HomePage(),
@@ -148,7 +148,18 @@ class _AppShellState extends State<AppShell> {
                 alignment: Alignment.bottomCenter,
                 child: Padding(
                   padding: const EdgeInsets.only(bottom: 16),
-                  child: LanguageMenu(extended: extended),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        tooltip: t('exclude.title'),
+                        icon: const Icon(Icons.block_outlined),
+                        onPressed: () => showExclusions(context),
+                      ),
+                      const SizedBox(height: 4),
+                      LanguageMenu(extended: extended),
+                    ],
+                  ),
                 ),
               ),
             ),
