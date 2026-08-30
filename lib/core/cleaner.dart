@@ -4,7 +4,9 @@ import 'dart:io';
 import 'package:ffi/ffi.dart';
 import 'package:path/path.dart' as p;
 
+import 'fs_walk.dart';
 import 'models.dart';
+import 'paths.dart';
 import 'win32.dart';
 
 const Set<String> _protectedExtensions = {
@@ -89,7 +91,7 @@ void _deletePermanently(
     final size = _sizeOrZero(path);
 
     try {
-      File(path).deleteSync();
+      File(extendedPath(path)).deleteSync();
       result.deleted++;
       result.freedBytes += size;
     } on FileSystemException catch (e) {
@@ -179,6 +181,14 @@ void _recycle(
   }
 
   for (final path in files) {
+    // SHFileOperation predates the extended path form and will not take it,
+    // so a file this deep can be found and measured but not recycled. Saying
+    // so beats deleting it outright when the Recycle Bin was asked for.
+    if (exceedsMaxPath(path)) {
+      result.errors.add(CleanError(path, CleanFailure.pathTooLong));
+      continue;
+    }
+
     if (batchChars + path.length + 1 > maxBatchChars && batch.isNotEmpty) {
       flush();
     }
@@ -245,10 +255,6 @@ CleanFailure _reasonFor(FileSystemException error) {
   }
 }
 
-int _sizeOrZero(String path) {
-  try {
-    return File(path).lengthSync();
-  } catch (_) {
-    return 0;
-  }
-}
+/// What removing this file hands back, which is the number the result
+/// reports. A compressed file gives back less than its length says.
+int _sizeOrZero(String path) => reclaimableSize(path) ?? 0;

@@ -3,6 +3,8 @@ import 'dart:io';
 
 import 'package:ffi/ffi.dart';
 
+import 'paths.dart';
+
 /// Minimal hand-rolled bindings for the Win32 areas this app needs: drive
 /// capacity, Recycle Bin deletion, the UI language, and whether the process is
 /// elevated. Declaring them here rather than depending on a bindings package
@@ -166,6 +168,43 @@ int? fileSizeFromDirectory(String path) {
     calloc
       ..free(name)
       ..free(data);
+  }
+}
+
+final int Function() getLastError = _kernel32
+    .lookupFunction<Uint32 Function(), int Function()>('GetLastError');
+
+final int Function(Pointer<Utf16>, Pointer<Uint32>) getCompressedFileSize =
+    _kernel32.lookupFunction<
+        Uint32 Function(Pointer<Utf16>, Pointer<Uint32>),
+        int Function(Pointer<Utf16>, Pointer<Uint32>)>(
+  'GetCompressedFileSizeW',
+);
+
+const int _invalidFileSize = 0xFFFFFFFF;
+
+/// What the file takes up on the volume, which is not always what it says it
+/// is: a compressed or sparse file reports a length far larger than the space
+/// deleting it would hand back, and this tool exists to say how much that is.
+///
+/// Null when the size could not be read. The error value is a legitimate low
+/// word for a file of exactly 4 GB minus one byte, so the last error decides
+/// which it was.
+int? fileSizeOnDisk(String path) {
+  final name = extendedPath(path).toNativeUtf16(allocator: calloc);
+  final high = calloc<Uint32>();
+
+  try {
+    final low = getCompressedFileSize(name, high);
+    if (low == _invalidFileSize && getLastError() != 0) return null;
+
+    return (high.value << 32) | low;
+  } catch (_) {
+    return null;
+  } finally {
+    calloc
+      ..free(name)
+      ..free(high);
   }
 }
 

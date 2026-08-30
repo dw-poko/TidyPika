@@ -226,7 +226,7 @@ ScanResult scanTarget(
 
       if (!matchesPatterns(p.basename(path), target.patterns)) continue;
 
-      final size = fileSize(path);
+      final size = reclaimableSize(path);
       if (size == null) {
         errors++;
         continue;
@@ -320,7 +320,7 @@ List<FileEntry> scanLargeFiles(
     final files = i == 0 ? listFilesShallow(branch) : walkFiles(branch);
 
     for (final path in files) {
-      final size = fileSize(path);
+      final size = reclaimableSize(path);
       if (size != null && size >= minSizeBytes) {
         results.add(FileEntry(path, size));
       }
@@ -375,7 +375,7 @@ DirectoryReport analyzeDirectory(
   var looseSize = 0;
 
   for (final path in listFilesShallow(root)) {
-    final size = fileSize(path);
+    final size = reclaimableSize(path);
     if (size == null) continue;
 
     loose.add(FileEntry(path, size));
@@ -416,7 +416,7 @@ DirectoryReport analyzeDirectory(
     var count = 0;
 
     for (final path in walkFiles(dir)) {
-      final fileBytes = fileSize(path);
+      final fileBytes = reclaimableSize(path);
       if (fileBytes != null) {
         size += fileBytes;
         count++;

@@ -325,6 +325,7 @@ const Map<String, String> _en = {
   'failure.inUse': 'In use',
   'failure.notFound': 'Already gone',
   'failure.refused': 'Refused',
+  'failure.pathTooLong': 'Path too long for the Recycle Bin',
   'result.close': 'Close',
 
   'error.title': 'Something went wrong',
@@ -543,6 +544,7 @@ const Map<String, String> _ko = {
   'failure.inUse': '사용 중',
   'failure.notFound': '이미 없음',
   'failure.refused': '거부됨',
+  'failure.pathTooLong': '경로가 길어 휴지통으로 못 보냄',
   'result.close': '닫기',
 
   'error.title': '문제가 발생했습니다',
@@ -763,6 +765,7 @@ const Map<String, String> _ja = {
   'failure.inUse': '使用中',
   'failure.notFound': '既にありません',
   'failure.refused': '拒否',
+  'failure.pathTooLong': 'パスが長くごみ箱に入れられない',
   'result.close': '閉じる',
 
   'error.title': '問題が発生しました',
@@ -973,6 +976,7 @@ const Map<String, String> _zh = {
   'failure.inUse': '正在使用',
   'failure.notFound': '已不存在',
   'failure.refused': '被拒绝',
+  'failure.pathTooLong': '路径过长，无法移到回收站',
   'result.close': '关闭',
 
   'error.title': '出现问题',

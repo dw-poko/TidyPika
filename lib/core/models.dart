@@ -87,7 +87,17 @@ class DuplicateGroup {
 /// The reason has to travel back from the scanning isolate, so it is carried
 /// as data and turned into words by the UI — the isolate has its own copy of
 /// the language setting and would always answer in English.
-enum CleanFailure { protected, accessDenied, inUse, notFound, refused }
+enum CleanFailure {
+  protected,
+  accessDenied,
+  inUse,
+  notFound,
+  refused,
+
+  /// Deeper than the Recycle Bin's shell API can reach. Permanent deletion
+  /// still gets there.
+  pathTooLong,
+}
 
 class CleanError {
   const CleanError(this.path, this.reason);
